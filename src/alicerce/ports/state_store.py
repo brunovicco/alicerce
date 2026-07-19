@@ -14,6 +14,8 @@ class StateStoreErrorCause(StrEnum):
     ALREADY_EXISTS = "already_exists"
     NOT_FOUND = "not_found"
     CONFLICT = "conflict"
+    CORRUPT = "corrupt"
+    STORAGE_FAILURE = "storage_failure"
 
 
 class StateStoreError(RuntimeError):
