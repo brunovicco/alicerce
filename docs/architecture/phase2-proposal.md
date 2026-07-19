@@ -3,7 +3,8 @@
 Status: Approved
 Decision date: 2026-07-18
 Decision gate: approved with recorded implementation prerequisites
-Implementation authorized: no
+Implementation authorized: Phase 2A only
+Authorization date: 2026-07-19
 
 ## Purpose
 

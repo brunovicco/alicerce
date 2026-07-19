@@ -1,6 +1,7 @@
 # Phase 2A Package Boundaries
 
-Status: Proposed
+Status: Accepted
+Decision date: 2026-07-19
 
 ## Runtime target
 
@@ -8,8 +9,8 @@ Status: Proposed
 - Packaging: `src` layout with deterministic `uv.lock`.
 - Canonical schemas source: `engineering-loop-schemas v0.1.2`, source code
   commit `0459d61b7b1d4e7b46709e6d3895770553e6fab0`.
-- Schema acquisition: normal locked dependency or deterministic generated
-  bundle; the implementation PR must choose one and record provenance.
+- Schema acquisition: normal dependency pinned to the immutable full source
+  commit and resolved by `uv.lock`; Alicerce does not vendor the schema bundle.
 - Optional observability adapters are outside Phase 2A.
 
 ## Proposed layout
@@ -62,6 +63,11 @@ and must not expose GitHub, Codex, Claude, OpenTelemetry, A2A, or MCP SDK types.
 
 `ProviderPort` has only a deterministic fake in Phase 2A.
 
+The initial dependency source is pinned to
+`0459d61b7b1d4e7b46709e6d3895770553e6fab0`. Moving later to a published package
+artifact requires a separate dependency PR proving equivalent source provenance
+and does not change domain boundaries.
+
 Provider usage observations contain a source identity but no self-declared
 trust flag. A trusted, run-pinned `UsageTrustPolicy` maintained by the domain
 classifies known sources as advisory or corroborated. Unknown sources are
@@ -72,7 +78,7 @@ advisory. Adapters cannot upgrade their own trust classification.
 - A source scan rejects provider-specific identifiers in domain modules.
 - Importing the mandatory package does not import provider or telemetry SDKs.
 - Tests run on Python 3.12, 3.13, and 3.14.
-- The selected schema acquisition mode verifies the full source commit.
+- The locked schema dependency verifies the full source commit.
 - Candidate-controlled `PYTHONPATH` cannot shadow trusted modules.
 - All filesystem and subprocess behavior is reachable only through ports.
 - The hash of `UsageTrustPolicy` is bound into immutable run identity.

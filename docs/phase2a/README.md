@@ -1,8 +1,9 @@
 # Phase 2A Readiness Pack
 
-Status: Proposed
-Review required: yes
-Implementation authorized by this document: no
+Status: Approved
+Decision date: 2026-07-19
+Review required: completed
+Implementation authorized by this document: Phase 2A only
 
 ## Purpose
 
@@ -49,13 +50,15 @@ Phase 2A may not implement provider SDKs, `a2a-otel-kit`, A2A, MCP protocol
 adapters, GitHub mutations, merge, deploy, release, or remote multi-tenant
 execution.
 
-## Approval rule
+## Authorization decision
 
-The implementation authorization may change only in a review PR that:
+The readiness review completed the required actions:
 
-1. marks every document in this pack Accepted;
-2. resolves every row in the acceptance matrix;
-3. confirms the schemas pin and upstream semantics;
-4. updates the approved architecture proposal from
-   `Implementation authorized: no` to an explicit Phase 2A-only authorization;
-5. preserves all Phase 2B deferrals.
+1. every policy document in this pack is Accepted;
+2. every row in the acceptance matrix is mandatory for implementation;
+3. schemas executable and documentation provenance are pinned separately;
+4. the architecture proposal grants only Phase 2A authorization;
+5. all Phase 2B deferrals remain in force.
+
+This approval authorizes incremental implementation of the trusted local core
+against the mandatory acceptance matrix. It does not declare Phase 2A complete.
