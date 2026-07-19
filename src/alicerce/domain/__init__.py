@@ -4,6 +4,11 @@ The domain layer has no filesystem, subprocess, network, provider, or adapter
 dependencies.
 """
 
+from alicerce.domain.contract_binding import (
+    BoundContract,
+    ContractBindingCause,
+    ContractBindingError,
+)
 from alicerce.domain.contracts import FINAL_STATES, Contract, FinalState
 from alicerce.domain.run_identity import (
     BaselineSha,
@@ -18,7 +23,10 @@ from alicerce.domain.run_identity import (
 __all__ = [
     "FINAL_STATES",
     "BaselineSha",
+    "BoundContract",
     "Contract",
+    "ContractBindingCause",
+    "ContractBindingError",
     "ContractHash",
     "ContractId",
     "ContractVersion",

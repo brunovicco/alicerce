@@ -10,9 +10,10 @@ implementation of the trusted local core is authorized against the mandatory
 Phase 2A acceptance matrix.
 
 The current implementation establishes package boundaries, deterministic
-quality gates, canonical schema integration, and immutable run identity types.
-It does not implement an autonomous runner, state persistence, candidate
-promotion, merge, deployment, provider adapters, or observability integration.
+quality gates, canonical schema integration, immutable run identity types, and
+exact-byte contract binding. It does not implement an autonomous runner, state
+persistence, candidate promotion, merge, deployment, provider adapters, or
+observability integration.
 
 ## Architectural direction
 
@@ -39,11 +40,10 @@ Only Phase 2A is authorized. Phase 2B integrations and every repository,
 promotion, merge, deployment, and release mutation remain outside the core's
 authority.
 
-## Known identity limitation
+## Contract identity
 
-`RunIdentity` accepts a validated SHA-256 contract digest but does not yet
-recompute that digest from canonical contract bytes. Until canonicalization and
-hashing are implemented, correspondence between `contract_hash` and the supplied
-canonical `Contract` is not mechanically proven. Acceptance rows A03 and A08
-therefore remain partial; a strict expected-failure regression test records the
-gap and will fail if the limitation is fixed without updating its evidence.
+`RunIdentity` accepts a `BoundContract` derived from exact UTF-8 JSON bytes. The
+binding includes the canonical `Contract`, the original bytes, and their
+SHA-256 digest; direct construction revalidates their correspondence. A03
+remains partial until persistence and resume are implemented. A08 remains open
+until evidence integrity bindings are implemented.
