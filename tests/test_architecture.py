@@ -1,7 +1,5 @@
 """Regression tests for the approved Phase 2A package boundaries."""
 
-from __future__ import annotations
-
 import ast
 import tomllib
 from collections.abc import Iterator
