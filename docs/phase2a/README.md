@@ -25,6 +25,7 @@ does not require a schema release, tag, or consumer revendor.
 ## Documents
 
 - [Package boundaries](package-boundaries.md)
+- [Contract source identity](contract-identity.md)
 - [Trusted gate specifications](trusted-gates.md)
 - [Budget accounting](budget-accounting.md)
 - [Artifact retention](artifact-retention.md)

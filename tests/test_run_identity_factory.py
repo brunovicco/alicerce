@@ -3,23 +3,26 @@
 from datetime import UTC, datetime
 
 import pytest
-from loop_schemas.models import (  # pyright: ignore[reportMissingTypeStubs]
-    Acceptance,
-    Actions,
-    Baseline,
-    Budgets,
-    Contract,
-    HumanReview,
-    Scope,
-    Selection,
-    Trigger,
-)
 
+from alicerce.application.contract_binding import bind_contract
 from alicerce.application.run_identity import create_run_identity
-from alicerce.domain.run_identity import BaselineSha, ContractHash, PolicyHash, RunId
+from alicerce.domain.run_identity import BaselineSha, PolicyHash, RunId
 from alicerce.ports.determinism import ClockPort, IdGeneratorPort
 
 NOW = datetime(2026, 7, 19, 12, 0, tzinfo=UTC)
+CONTRACT_BYTES = b"""{
+  "version": "0.1.2",
+  "id": "quality-loop",
+  "objective": "Improve repository quality.",
+  "trigger": {"type": "manual"},
+  "selection": {"strategy": "single-item"},
+  "baseline": {"commands": ["quality"]},
+  "acceptance": {"hard_gates": ["tests"]},
+  "budgets": {"max_tokens": 1},
+  "scope": {"allowlist": ["src/**"], "denylist": []},
+  "actions": {"allowed": ["edit"], "denied": []},
+  "human_review": {"required": true}
+}"""
 
 
 class FixedClock:
@@ -36,26 +39,9 @@ class FixedIdGenerator:
         return RunId("run-fixed")
 
 
-def _contract() -> Contract:
-    return Contract(
-        version="0.1.2",
-        id="quality-loop",
-        objective="Improve repository quality.",
-        trigger=Trigger(type="manual"),
-        selection=Selection(strategy="single-item"),
-        baseline=Baseline(commands=("quality",)),
-        acceptance=Acceptance(hard_gates=("tests",)),
-        budgets=Budgets(max_tokens=1),
-        scope=Scope(allowlist=("src/**",), denylist=()),
-        actions=Actions(allowed=("edit",), denied=()),
-        human_review=HumanReview(required=True),
-    )
-
-
 def _create() -> object:
     return create_run_identity(
-        contract=_contract(),
-        contract_hash=ContractHash("a" * 64),
+        bound_contract=bind_contract(CONTRACT_BYTES),
         baseline_sha=BaselineSha("b" * 40),
         policy_hash=PolicyHash("c" * 64),
         clock=FixedClock(),
@@ -71,11 +57,11 @@ def test_test_doubles_conform_to_structural_ports() -> None:
     assert generator.new_run_id() == RunId("run-fixed")
 
 
-def test_factory_uses_canonical_contract_and_deterministic_seams() -> None:
-    """The factory binds canonical metadata without hidden nondeterminism."""
+def test_factory_uses_bound_contract_and_deterministic_seams() -> None:
+    """The factory binds proven contract metadata without hidden nondeterminism."""
+    bound_contract = bind_contract(CONTRACT_BYTES)
     identity = create_run_identity(
-        contract=_contract(),
-        contract_hash=ContractHash("a" * 64),
+        bound_contract=bound_contract,
         baseline_sha=BaselineSha("b" * 40),
         policy_hash=PolicyHash("c" * 64),
         clock=FixedClock(),
@@ -84,16 +70,16 @@ def test_factory_uses_canonical_contract_and_deterministic_seams() -> None:
     assert identity.run_id == RunId("run-fixed")
     assert identity.contract_id.value == "quality-loop"
     assert identity.contract_version.value == "0.1.2"
+    assert identity.contract_hash == bound_contract.contract_hash
     assert identity.created_at is NOW
     assert identity == _create()
 
 
-def test_factory_rejects_noncanonical_contract_type() -> None:
-    """A local lookalike cannot replace the canonical contract model."""
-    with pytest.raises(TypeError, match="canonical Contract"):
+def test_factory_rejects_unbound_contract_input() -> None:
+    """A canonical contract alone cannot bypass exact-byte binding."""
+    with pytest.raises(TypeError, match="BoundContract"):
         create_run_identity(
-            contract=object(),  # type: ignore[arg-type]
-            contract_hash=ContractHash("a" * 64),
+            bound_contract=object(),  # type: ignore[arg-type]
             baseline_sha=BaselineSha("b" * 40),
             policy_hash=PolicyHash("c" * 64),
             clock=FixedClock(),
@@ -101,16 +87,12 @@ def test_factory_rejects_noncanonical_contract_type() -> None:
         )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="canonical contract hashing is deferred; A03 and A08 remain partial",
-)
-def test_factory_rejects_hash_not_derived_from_contract() -> None:
-    """Known gap: the supplied contract digest is not yet recomputed."""
-    with pytest.raises(ValueError, match="contract hash"):
+def test_factory_has_no_independent_contract_hash_parameter() -> None:
+    """Callers cannot pair a bound contract with an unrelated digest."""
+    with pytest.raises(TypeError, match="contract_hash"):
         create_run_identity(
-            contract=_contract(),
-            contract_hash=ContractHash("f" * 64),
+            bound_contract=bind_contract(CONTRACT_BYTES),
+            contract_hash="f" * 64,  # type: ignore[call-arg]
             baseline_sha=BaselineSha("b" * 40),
             policy_hash=PolicyHash("c" * 64),
             clock=FixedClock(),
