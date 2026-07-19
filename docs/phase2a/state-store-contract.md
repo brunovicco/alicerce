@@ -29,8 +29,9 @@ caller cannot pass a matching revision while silently changing the contract,
 baseline, policy, or other checkpoint facts.
 
 Store implementations must expose the stable operational causes
-`already_exists`, `not_found`, and `conflict`. They must never append an event
-or change the current checkpoint after a failed precondition.
+`already_exists`, `not_found`, `conflict`, `corrupt`, and `storage_failure`.
+They must never append an event or change the current checkpoint after a failed
+precondition.
 
 ## Validated invariants
 
@@ -56,7 +57,7 @@ boundaries, and resume validation are implemented.
 A10 is unchanged because verdict construction and single-assignment verdict
 persistence remain outside this increment.
 
-## Explicit exclusions
+## Original contract-only increment exclusions
 
 This increment does not implement:
 
@@ -71,3 +72,7 @@ This increment does not implement:
 
 The in-memory implementation used by the executable contract tests exists only
 under `tests/` and is not part of the Alicerce runtime package.
+
+The subsequent [SQLite state store](sqlite-state-store.md) increment implements
+canonical local serialization and a durable transactional adapter. Resume,
+verdict persistence, and the remaining exclusions above are still deferred.

@@ -13,10 +13,11 @@ The current implementation establishes package boundaries, deterministic
 quality gates, canonical schema integration, immutable run identity types, and
 exact-byte contract binding. It also defines a pure monotonic run lifecycle
 policy with immutable snapshots and attributed transition events, plus an
-immutable checkpoint and compare-and-swap state-store contract. It does not
-implement an autonomous runner, a concrete persistence adapter, resume,
-candidate promotion, merge, deployment, provider adapters, or observability
-integration.
+immutable checkpoint and compare-and-swap state-store contract. A local SQLite
+adapter now provides canonical state serialization, transactional append-only
+history, whole-checkpoint CAS, and fail-closed corruption detection. It does
+not implement an autonomous runner, resume orchestration, candidate promotion,
+merge, deployment, provider adapters, or observability integration.
 
 ## Architectural direction
 
@@ -56,6 +57,10 @@ until evidence integrity bindings are implemented.
 `RunCheckpoint` binds the complete immutable identity to the current lifecycle.
 `StateUpdate` validates one revision, event, and resulting snapshot before a
 store sees it. `StateStorePort` requires exclusive initialization, whole-
-checkpoint compare-and-swap, and append-only ordered history. No concrete store
-or serialized checkpoint format is part of this increment; A03 and A11 remain
-partial until durable persistence and resume validation are implemented.
+checkpoint compare-and-swap, and append-only ordered history.
+
+`SQLiteStateStore` implements that boundary with schema-versioned canonical
+JSON, atomic journal/checkpoint updates, persistence across process instances,
+and full-history validation on every read. A03 and A11 remain partial until the
+resume use case revalidates external identities, artifacts, counters,
+deadlines, verdict state, and idempotency.

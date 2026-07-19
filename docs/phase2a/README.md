@@ -28,6 +28,7 @@ does not require a schema release, tag, or consumer revendor.
 - [Contract source identity](contract-identity.md)
 - [Run lifecycle policy](run-lifecycle.md)
 - [State store contract](state-store-contract.md)
+- [SQLite state store](sqlite-state-store.md)
 - [Trusted gate specifications](trusted-gates.md)
 - [Budget accounting](budget-accounting.md)
 - [Artifact retention](artifact-retention.md)
