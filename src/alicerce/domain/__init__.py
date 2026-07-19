@@ -30,6 +30,14 @@ from alicerce.domain.run_identity import (
     RunId,
     RunIdentity,
 )
+from alicerce.domain.state import (
+    RunCheckpoint,
+    StateInvariantCause,
+    StateInvariantError,
+    StateUpdate,
+    create_initial_checkpoint,
+    prepare_state_update,
+)
 
 __all__ = [
     "FINAL_STATES",
@@ -49,9 +57,15 @@ __all__ = [
     "LifecycleState",
     "LifecycleTransition",
     "PolicyHash",
+    "RunCheckpoint",
     "RunId",
     "RunIdentity",
     "RunLifecycle",
+    "StateInvariantCause",
+    "StateInvariantError",
+    "StateUpdate",
     "advance_lifecycle",
+    "create_initial_checkpoint",
+    "prepare_state_update",
     "start_lifecycle",
 ]

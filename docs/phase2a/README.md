@@ -27,6 +27,7 @@ does not require a schema release, tag, or consumer revendor.
 - [Package boundaries](package-boundaries.md)
 - [Contract source identity](contract-identity.md)
 - [Run lifecycle policy](run-lifecycle.md)
+- [State store contract](state-store-contract.md)
 - [Trusted gate specifications](trusted-gates.md)
 - [Budget accounting](budget-accounting.md)
 - [Artifact retention](artifact-retention.md)
