@@ -1,6 +1,7 @@
 # Phase 2A Trusted Gate Specifications
 
-Status: Proposed
+Status: Accepted
+Decision date: 2026-07-19
 
 ## Principle
 

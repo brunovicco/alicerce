@@ -1,6 +1,7 @@
 # Phase 2A Acceptance Matrix
 
-Status: Proposed
+Status: Accepted
+Decision date: 2026-07-19
 
 Every row is mandatory before Phase 2A can be declared complete.
 

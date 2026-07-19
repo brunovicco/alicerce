@@ -1,6 +1,7 @@
 # Phase 2A Local Human Review
 
-Status: Proposed
+Status: Accepted
+Decision date: 2026-07-19
 
 ## Boundary
 
