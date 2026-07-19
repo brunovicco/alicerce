@@ -5,11 +5,14 @@ evidence-gated engineering loops used by Python engineering harnesses.
 
 ## Current status
 
-The repository is in the Phase 2 Design Gate. Its current deliverables are
-architectural decisions and interface proposals only.
+The Phase 2 Design Gate and Phase 2A readiness review are approved. Incremental
+implementation of the trusted local core is authorized against the mandatory
+Phase 2A acceptance matrix.
 
-No autonomous runner, candidate promotion, merge, deployment, provider adapter,
-or observability integration is implemented or authorized yet.
+The current implementation establishes package boundaries, deterministic
+quality gates, canonical schema integration, and immutable run identity types.
+It does not implement an autonomous runner, state persistence, candidate
+promotion, merge, deployment, provider adapters, or observability integration.
 
 ## Architectural direction
 
@@ -30,7 +33,17 @@ will not be a mandatory dependency of the core.
 - `brunovicco/claude-python-engineering-harness`
 - `brunovicco/a2a-otel-kit`
 
-## Implementation gate
+## Implementation scope
 
-Phase 2 implementation must not begin until the architectural proposal and its
-ADRs have been reviewed and accepted.
+Only Phase 2A is authorized. Phase 2B integrations and every repository,
+promotion, merge, deployment, and release mutation remain outside the core's
+authority.
+
+## Known identity limitation
+
+`RunIdentity` accepts a validated SHA-256 contract digest but does not yet
+recompute that digest from canonical contract bytes. Until canonicalization and
+hashing are implemented, correspondence between `contract_hash` and the supplied
+canonical `Contract` is not mechanically proven. Acceptance rows A03 and A08
+therefore remain partial; a strict expected-failure regression test records the
+gap and will fail if the limitation is fixed without updating its evidence.
