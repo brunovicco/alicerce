@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import tomllib
 from collections.abc import Iterator
+from importlib.util import resolve_name
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,17 +38,32 @@ def _layer_for(path: Path) -> str | None:
     return relative.parts[0] if len(relative.parts) > 1 else None
 
 
-def _internal_imports(path: Path) -> Iterator[str]:
+def _package_for(path: Path) -> str:
+    relative = path.relative_to(SOURCE_ROOT)
+    return ".".join(("alicerce", *relative.parent.parts))
+
+
+def _internal_imports(path: Path, *, package: str | None = None) -> Iterator[str]:
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    package = package or _package_for(path)
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name.startswith("alicerce."):
                     yield alias.name
-        elif (
-            isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("alicerce.")
-        ):
-            yield node.module
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                target = resolve_name(f"{'.' * node.level}{node.module or ''}", package)
+                if node.module is None:
+                    for alias in node.names:
+                        yield f"{target}.{alias.name}"
+                else:
+                    yield target
+            elif node.module == "alicerce":
+                for alias in node.names:
+                    yield f"alicerce.{alias.name}"
+            elif node.module and node.module.startswith("alicerce."):
+                yield node.module
 
 
 def test_required_package_layers_exist() -> None:
@@ -74,6 +90,19 @@ def test_layer_import_direction_is_inward_only() -> None:
             if target_layer and target_layer not in ALLOWED_IMPORTS[source_layer]:
                 violations.append(f"{path.relative_to(ROOT)} -> {imported}")
     assert violations == []
+
+
+def test_import_scanner_normalizes_boundary_bypass_forms(tmp_path: Path) -> None:
+    """Relative and root imports cannot bypass architectural enforcement."""
+    module = tmp_path / "module.py"
+    cases = {
+        "from ..adapters import local\n": {"alicerce.adapters"},
+        "from .. import adapters\n": {"alicerce.adapters"},
+        "from alicerce import adapters\n": {"alicerce.adapters"},
+    }
+    for source, expected in cases.items():
+        module.write_text(source, encoding="utf-8")
+        assert set(_internal_imports(module, package="alicerce.domain")) == expected
 
 
 def test_domain_and_ports_are_provider_neutral() -> None:
