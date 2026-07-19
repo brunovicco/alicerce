@@ -10,6 +10,17 @@ from alicerce.domain.contract_binding import (
     ContractBindingError,
 )
 from alicerce.domain.contracts import FINAL_STATES, Contract, FinalState
+from alicerce.domain.lifecycle import (
+    LifecycleActor,
+    LifecycleAdvance,
+    LifecycleError,
+    LifecycleErrorCause,
+    LifecycleState,
+    LifecycleTransition,
+    RunLifecycle,
+    advance_lifecycle,
+    start_lifecycle,
+)
 from alicerce.domain.run_identity import (
     BaselineSha,
     ContractHash,
@@ -31,7 +42,16 @@ __all__ = [
     "ContractId",
     "ContractVersion",
     "FinalState",
+    "LifecycleActor",
+    "LifecycleAdvance",
+    "LifecycleError",
+    "LifecycleErrorCause",
+    "LifecycleState",
+    "LifecycleTransition",
     "PolicyHash",
     "RunId",
     "RunIdentity",
+    "RunLifecycle",
+    "advance_lifecycle",
+    "start_lifecycle",
 ]

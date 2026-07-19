@@ -11,9 +11,10 @@ Phase 2A acceptance matrix.
 
 The current implementation establishes package boundaries, deterministic
 quality gates, canonical schema integration, immutable run identity types, and
-exact-byte contract binding. It does not implement an autonomous runner, state
-persistence, candidate promotion, merge, deployment, provider adapters, or
-observability integration.
+exact-byte contract binding. It also defines a pure monotonic run lifecycle
+policy with immutable snapshots and attributed transition events. It does not
+implement an autonomous runner, state persistence, candidate promotion, merge,
+deployment, provider adapters, or observability integration.
 
 ## Architectural direction
 
