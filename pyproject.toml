@@ -1,0 +1,68 @@
+[project]
+name = "alicerce"
+version = "0.1.0"
+description = "Vendor-neutral core for deterministic, auditable, evidence-gated engineering loops."
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+    "loop-schemas @ git+https://github.com/brunovicco/engineering-loop-schemas.git@0459d61b7b1d4e7b46709e6d3895770553e6fab0",
+]
+
+[dependency-groups]
+dev = [
+    "bandit[toml]>=1.8,<2",
+    "pip-audit>=2.9,<3",
+    "pyright==1.1.407",
+    "pytest==9.1.1",
+    "pytest-cov==6.0.0",
+    "ruff==0.15.21",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/alicerce"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM", "RUF", "ANN", "D", "S"]
+ignore = ["ANN401", "D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["D", "S101"]
+"scripts/quality_gate.py" = ["S603"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pyright]
+include = ["src", "scripts", "tests"]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+
+[[tool.pyright.executionEnvironments]]
+root = "tests"
+reportUnknownParameterType = false
+reportMissingParameterType = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+
+[tool.pytest.ini_options]
+addopts = "--cov=alicerce --cov-report=term-missing --cov-fail-under=90"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src/alicerce"]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = []
