@@ -12,9 +12,11 @@ Phase 2A acceptance matrix.
 The current implementation establishes package boundaries, deterministic
 quality gates, canonical schema integration, immutable run identity types, and
 exact-byte contract binding. It also defines a pure monotonic run lifecycle
-policy with immutable snapshots and attributed transition events. It does not
-implement an autonomous runner, state persistence, candidate promotion, merge,
-deployment, provider adapters, or observability integration.
+policy with immutable snapshots and attributed transition events, plus an
+immutable checkpoint and compare-and-swap state-store contract. It does not
+implement an autonomous runner, a concrete persistence adapter, resume,
+candidate promotion, merge, deployment, provider adapters, or observability
+integration.
 
 ## Architectural direction
 
@@ -48,3 +50,12 @@ binding includes the canonical `Contract`, the original bytes, and their
 SHA-256 digest; direct construction revalidates their correspondence. A03
 remains partial until persistence and resume are implemented. A08 remains open
 until evidence integrity bindings are implemented.
+
+## State persistence boundary
+
+`RunCheckpoint` binds the complete immutable identity to the current lifecycle.
+`StateUpdate` validates one revision, event, and resulting snapshot before a
+store sees it. `StateStorePort` requires exclusive initialization, whole-
+checkpoint compare-and-swap, and append-only ordered history. No concrete store
+or serialized checkpoint format is part of this increment; A03 and A11 remain
+partial until durable persistence and resume validation are implemented.
