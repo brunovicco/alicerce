@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import Event, Thread
 
 import pytest
 
@@ -651,3 +652,51 @@ def test_workspace_walk_errors_fail_closed(tmp_path: Path) -> None:
     with pytest.raises(WorkspaceError) as captured:
         adapter._raise_walk_error(OSError("injected"))  # pyright: ignore[reportPrivateUsage]
     assert captured.value.cause is WorkspaceErrorCause.STORAGE_FAILURE
+
+
+def test_execution_lease_blocks_release_until_coordination_finishes(tmp_path: Path) -> None:
+    source, baseline = _source_repository(tmp_path)
+    adapter, root, _ = _adapter(tmp_path, source, "workspace")
+    workspace = adapter.prepare(_identity(baseline))
+    entered = Event()
+    finish_execution = Event()
+    release_finished = Event()
+
+    def hold_lease() -> None:
+        with adapter.execution_lease(workspace) as path:
+            assert path == root / "workspace"
+            entered.set()
+            assert finish_execution.wait(timeout=5)
+
+    def release_workspace() -> None:
+        adapter.release(workspace)
+        release_finished.set()
+
+    execution_thread = Thread(target=hold_lease)
+    execution_thread.start()
+    assert entered.wait(timeout=5)
+    release_thread = Thread(target=release_workspace)
+    release_thread.start()
+    assert not release_finished.wait(timeout=0.05)
+    finish_execution.set()
+    execution_thread.join(timeout=5)
+    release_thread.join(timeout=5)
+    assert not execution_thread.is_alive()
+    assert not release_thread.is_alive()
+    assert release_finished.is_set()
+    assert adapter.load(workspace.workspace_id) is None
+
+
+def test_execution_lease_revalidates_workspace_after_coordination(tmp_path: Path) -> None:
+    source, baseline = _source_repository(tmp_path)
+    adapter, _, _ = _adapter(tmp_path, source, "workspace")
+    workspace = adapter.prepare(_identity(baseline))
+    outside = tmp_path / "outside"
+    outside.mkdir()
+
+    with (
+        pytest.raises(WorkspaceError) as captured,
+        adapter.execution_lease(workspace) as path,
+    ):
+        (path / "escape").symlink_to(outside, target_is_directory=True)
+    assert captured.value.cause is WorkspaceErrorCause.ISOLATION_FAILURE
