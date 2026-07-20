@@ -45,7 +45,9 @@ document derived from them. Filesystem acquisition remains behind a future
 
 - A02 gains executable evidence that the pinned canonical model and validator
   construct the bound contract.
-- The contract/hash correspondence gap within A03 is closed. A03 remains partial
-  until persistence and resume reject changed identities.
+- The contract/hash correspondence gap within A03 is closed.
+- A03 is satisfied by immutable value tests, durable identity persistence,
+  whole-checkpoint CAS, and resume rejection of changed contract, baseline, or
+  policy bindings. See [Resume identity validation](resume-identity-validation.md).
 - A08 remains open until candidate, specification, output, environment, and
   evidence bindings are implemented.
