@@ -16,8 +16,8 @@ policy with immutable snapshots and attributed transition events, plus an
 immutable checkpoint and compare-and-swap state-store contract. A local SQLite
 adapter now provides canonical state serialization, transactional append-only
 history, whole-checkpoint CAS, and fail-closed corruption detection. It does
-not implement an autonomous runner, resume orchestration, candidate promotion,
-merge, deployment, provider adapters, or observability integration.
+not implement an autonomous runner, full resume orchestration, candidate
+promotion, merge, deployment, provider adapters, or observability integration.
 
 ## Architectural direction
 
@@ -67,3 +67,15 @@ contract, baseline, or policy bindings and terminal runs before returning a
 checkpoint. A11 remains partial until resume also validates candidate and
 workspace identity, artifacts, counters, deadlines, verdict state, and
 idempotency.
+
+## Workspace capability boundary
+
+`WorkspaceIdentity` binds an opaque `WorkspaceId` capability to a run and its
+baseline without exposing a filesystem path. `CandidateIdentity` adds a
+semantically distinct complete candidate SHA. `WorkspacePort` defines trusted
+prepare, load, snapshot, and idempotent release operations.
+
+This boundary contains no filesystem or Git implementation. A04 remains partial
+until a local adapter proves that candidate writes cannot reach the trusted
+checkout, state store, artifact store, or gate drivers. A08 remains open until
+candidate and environment identities are bound into authoritative evidence.
