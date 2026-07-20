@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import BinaryIO, Final, cast
 
 from alicerce.domain.run_identity import BaselineSha
+from alicerce.domain.workspace import CandidateSha
 
 _DEFAULT_TIMEOUT_SECONDS: Final = 30.0
 _DEFAULT_MAX_OUTPUT_BYTES: Final = 1_048_576
@@ -194,6 +195,109 @@ class ControlledGitCli:
 
         return MaterializedBaseline(trusted_destination, baseline_sha)
 
+    def verify_baseline(
+        self,
+        repository: Path,
+        baseline_sha: BaselineSha,
+    ) -> MaterializedBaseline:
+        """Verify an existing detached repository and its absent remote."""
+        trusted_repository = self._validate_repository(repository)
+        baseline_sha = _require_baseline(baseline_sha)
+        try:
+            with tempfile.TemporaryDirectory(
+                prefix=".alicerce-git-control-",
+                dir=trusted_repository.parent,
+            ) as control_directory:
+                control = Path(control_directory)
+                hooks = control / "hooks"
+                home = control / "home"
+                config = control / "config"
+                hooks.mkdir()
+                home.mkdir()
+                config.mkdir()
+                environment = self._environment(home, config, hooks)
+                resolved_head = self._run(
+                    (
+                        "-C",
+                        str(trusted_repository),
+                        "rev-parse",
+                        "--verify",
+                        "HEAD^{commit}",
+                    ),
+                    cwd=trusted_repository.parent,
+                    environment=environment,
+                ).strip()
+                remotes = self._run(
+                    ("-C", str(trusted_repository), "remote"),
+                    cwd=trusted_repository.parent,
+                    environment=environment,
+                ).strip()
+        except GitCliError:
+            raise
+        except OSError as error:
+            raise GitCliError(
+                GitCliErrorCause.COMMAND_FAILED,
+                "Git verification control directory failed",
+            ) from error
+        if resolved_head != baseline_sha.value:
+            raise GitCliError(
+                GitCliErrorCause.BASELINE_MISMATCH,
+                "repository HEAD does not match the requested baseline",
+            )
+        if remotes:
+            raise GitCliError(
+                GitCliErrorCause.BASELINE_MISMATCH,
+                "materialized repository must not retain remotes",
+            )
+        return MaterializedBaseline(trusted_repository, baseline_sha)
+
+    def snapshot_candidate(self, repository: Path) -> CandidateSha:
+        """Compute a candidate tree through an isolated temporary index."""
+        trusted_repository = self._validate_repository(repository)
+        try:
+            with tempfile.TemporaryDirectory(
+                prefix=".alicerce-git-snapshot-",
+                dir=trusted_repository.parent,
+            ) as control_directory:
+                control = Path(control_directory)
+                hooks = control / "hooks"
+                home = control / "home"
+                config = control / "config"
+                hooks.mkdir()
+                home.mkdir()
+                config.mkdir()
+                environment = self._environment(home, config, hooks)
+                environment["GIT_INDEX_FILE"] = str(control / "candidate.index")
+                parent = trusted_repository.parent
+                self._run(
+                    ("-C", str(trusted_repository), "read-tree", "HEAD"),
+                    cwd=parent,
+                    environment=environment,
+                )
+                self._run(
+                    ("-C", str(trusted_repository), "add", "-A", "--", "."),
+                    cwd=parent,
+                    environment=environment,
+                )
+                tree_sha = self._run(
+                    ("-C", str(trusted_repository), "write-tree"),
+                    cwd=parent,
+                    environment=environment,
+                ).strip()
+            return CandidateSha(tree_sha)
+        except GitCliError:
+            raise
+        except OSError as error:
+            raise GitCliError(
+                GitCliErrorCause.COMMAND_FAILED,
+                "Git snapshot control directory failed",
+            ) from error
+        except (TypeError, ValueError) as error:
+            raise GitCliError(
+                GitCliErrorCause.COMMAND_FAILED,
+                "Git returned an invalid candidate tree identity",
+            ) from error
+
     @staticmethod
     def _validate_paths(source: object, destination: object) -> tuple[Path, Path]:
         source = _require_path(source, name="source")
@@ -221,6 +325,27 @@ class ControlledGitCli:
                 "destination must not be inside the source repository",
             )
         return trusted_source, trusted_destination
+
+    @staticmethod
+    def _validate_repository(repository: object) -> Path:
+        repository = _require_path(repository, name="repository")
+        if not repository.is_absolute():
+            raise GitCliError(GitCliErrorCause.INVALID_PATH, "repository must be absolute")
+        try:
+            trusted_repository = repository.resolve(strict=True)
+        except OSError as error:
+            raise GitCliError(GitCliErrorCause.INVALID_PATH, str(error)) from error
+        git_directory = trusted_repository / ".git"
+        if (
+            not trusted_repository.is_dir()
+            or not git_directory.is_dir()
+            or git_directory.is_symlink()
+        ):
+            raise GitCliError(
+                GitCliErrorCause.INVALID_PATH,
+                "repository must contain local Git metadata",
+            )
+        return trusted_repository
 
     @staticmethod
     def _environment(home: Path, config: Path, hooks: Path) -> dict[str, str]:

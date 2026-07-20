@@ -10,8 +10,9 @@ against a trusted local source repository. It creates a standalone disposable
 clone rather than a linked worktree or a filesystem copy.
 
 `ControlledGitCli` is deliberately internal to the local adapter package. Its
-only public operation materializes one exact `BaselineSha`; callers cannot
-supply arbitrary Git arguments or execute unrelated commands through it.
+typed operations materialize and verify one exact `BaselineSha` and compute a
+candidate Git tree through a temporary index. Callers cannot supply arbitrary
+Git arguments or execute unrelated commands through it.
 
 ## Process policy
 
@@ -50,16 +51,21 @@ The immutable `MaterializedBaseline` result contains only the absolute local
 repository path and verified semantic `BaselineSha`. It is adapter-local and
 is not exposed through a provider-neutral port.
 
+Existing-repository verification requires exact `HEAD^{commit}` equality and
+an empty remote set. Candidate snapshotting uses a temporary index, stages
+tracked changes plus untracked non-ignored content, and returns the resulting
+tree as `CandidateSha` without changing the real index or working tree.
+
 ## Acceptance impact
 
 A04 gains executable integration evidence for independent baseline
-materialization and a controlled process environment. It remains partial:
-capability-owned root mapping, protected-root checks, symlink scanning, release
-policy, and confinement of future candidate commands are not yet implemented.
+materialization and a controlled process environment. Capability-owned roots,
+symlink checks, and release are implemented by `LocalGitWorkspace`; confinement
+of future candidate commands remains open.
 
 A08 gains verification that the prepared checkout starts at the exact baseline
-commit. It remains open until trusted candidate snapshot and evidence bindings
-are implemented.
+commit plus deterministic candidate tree computation. It remains open until
+trusted command, environment, artifact, and evidence bindings are implemented.
 
 A19 remains protected. This primitive exposes no branch, push, merge, hosting,
 deployment, or release operation and removes the clone remote before returning.
@@ -68,11 +74,10 @@ deployment, or release operation and removes the clone remote before returning.
 
 This increment does not implement:
 
-- `WorkspacePort` or capability-to-path mapping;
-- candidate snapshot or `CandidateSha` computation;
+- provider-neutral orchestration outside the local workspace adapter;
 - generic command execution or `CommandExecutorPort`;
 - process sandboxing for untrusted candidate commands;
-- workspace loading, persistence, resume, or release;
+- workspace persistence or resume;
 - network cloning, fetch, pull, push, branches, merge, deployment, or release;
 - submodule initialization or Git LFS;
 - artifact, evidence, provider, or observability behavior.

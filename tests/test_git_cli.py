@@ -16,6 +16,7 @@ from alicerce.adapters.local.git_cli import (
     MaterializedBaseline,
 )
 from alicerce.domain.run_identity import BaselineSha
+from alicerce.domain.workspace import CandidateSha
 
 
 class InspectableControlledGitCli(ControlledGitCli):
@@ -100,6 +101,62 @@ def test_candidate_checkout_does_not_share_source_object_files(tmp_path: Path) -
     assert source_objects
     assert destination_objects
     assert source_objects.isdisjoint(destination_objects)
+
+
+def test_verifies_existing_baseline_and_rejects_changed_head_or_remote(tmp_path: Path) -> None:
+    source, baseline = _source_repository(tmp_path)
+    (source / "later.txt").write_text("later\n", encoding="utf-8")
+    _run_git(source, "add", "later.txt")
+    _run_git(source, "commit", "-m", "later")
+    later = _run_git(source, "rev-parse", "HEAD")
+    destination = tmp_path / "candidate"
+    cli = ControlledGitCli(_git())
+    cli.materialize_baseline(source, destination, baseline)
+    assert cli.verify_baseline(destination, baseline) == MaterializedBaseline(destination, baseline)
+
+    _run_git(destination, "remote", "add", "origin", str(source))
+    with pytest.raises(GitCliError) as remote:
+        cli.verify_baseline(destination, baseline)
+    assert remote.value.cause is GitCliErrorCause.BASELINE_MISMATCH
+    _run_git(destination, "remote", "remove", "origin")
+
+    _run_git(destination, "checkout", "--detach", later)
+    with pytest.raises(GitCliError) as head:
+        cli.verify_baseline(destination, baseline)
+    assert head.value.cause is GitCliErrorCause.BASELINE_MISMATCH
+
+
+def test_candidate_snapshot_uses_temporary_index_and_is_deterministic(tmp_path: Path) -> None:
+    source, baseline = _source_repository(tmp_path)
+    destination = tmp_path / "candidate"
+    cli = ControlledGitCli(_git())
+    cli.materialize_baseline(source, destination, baseline)
+    original_index_tree = _run_git(destination, "write-tree")
+
+    (destination / "payload.txt").write_text("changed\n", encoding="utf-8")
+    (destination / "new.txt").write_text("new\n", encoding="utf-8")
+    first = cli.snapshot_candidate(destination)
+    second = cli.snapshot_candidate(destination)
+
+    assert isinstance(first, CandidateSha)
+    assert first == second
+    assert first.value != _run_git(destination, "rev-parse", "HEAD^{tree}")
+    assert _run_git(destination, "write-tree") == original_index_tree
+    assert _run_git(destination, "status", "--porcelain").splitlines() == [
+        "M payload.txt",
+        "?? new.txt",
+    ]
+
+
+def test_candidate_snapshot_excludes_ignored_untracked_content(tmp_path: Path) -> None:
+    source, baseline = _source_repository(tmp_path)
+    destination = tmp_path / "candidate"
+    cli = ControlledGitCli(_git())
+    cli.materialize_baseline(source, destination, baseline)
+    (destination / ".gitignore").write_text("ignored.txt\n", encoding="utf-8")
+    before = cli.snapshot_candidate(destination)
+    (destination / "ignored.txt").write_text("ignored\n", encoding="utf-8")
+    assert cli.snapshot_candidate(destination) == before
 
 
 def test_invalid_baseline_fails_closed_and_discards_partial_clone(tmp_path: Path) -> None:
@@ -276,10 +333,91 @@ def test_result_rejects_type_confusion(tmp_path: Path) -> None:
         MaterializedBaseline(tmp_path, object())  # type: ignore[arg-type]
 
 
+@pytest.mark.parametrize("operation", ["verify", "snapshot"])
+def test_existing_repository_operations_reject_invalid_paths(
+    tmp_path: Path, operation: str
+) -> None:
+    cli = ControlledGitCli(_git())
+    baseline = BaselineSha("a" * 40)
+    invalid = tmp_path / "not-a-repository"
+    invalid.mkdir()
+    with pytest.raises(GitCliError) as captured:
+        if operation == "verify":
+            cli.verify_baseline(invalid, baseline)
+        else:
+            cli.snapshot_candidate(invalid)
+    assert captured.value.cause is GitCliErrorCause.INVALID_PATH
+
+
+def test_existing_repository_operations_reject_relative_and_missing_paths(tmp_path: Path) -> None:
+    cli = ControlledGitCli(_git())
+    baseline = BaselineSha("a" * 40)
+    with pytest.raises(GitCliError) as relative:
+        cli.snapshot_candidate(Path("relative"))
+    assert relative.value.cause is GitCliErrorCause.INVALID_PATH
+    with pytest.raises(GitCliError) as missing:
+        cli.verify_baseline(tmp_path / "missing", baseline)
+    assert missing.value.cause is GitCliErrorCause.INVALID_PATH
+
+
+@pytest.mark.parametrize("operation", ["verify", "snapshot"])
+def test_existing_repository_control_directory_failures_are_typed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    operation: str,
+) -> None:
+    source, baseline = _source_repository(tmp_path)
+    destination = tmp_path / "candidate"
+    cli = ControlledGitCli(_git())
+    cli.materialize_baseline(source, destination, baseline)
+
+    def fail_control_directory(*args: object, **kwargs: object) -> tempfile.TemporaryDirectory[str]:
+        raise OSError("injected")
+
+    monkeypatch.setattr(tempfile, "TemporaryDirectory", fail_control_directory)
+    with pytest.raises(GitCliError) as captured:
+        if operation == "verify":
+            cli.verify_baseline(destination, baseline)
+        else:
+            cli.snapshot_candidate(destination)
+    assert captured.value.cause is GitCliErrorCause.COMMAND_FAILED
+
+
+def test_candidate_snapshot_rejects_invalid_git_tree_identity(tmp_path: Path) -> None:
+    source, baseline = _source_repository(tmp_path)
+    destination = tmp_path / "candidate"
+    ControlledGitCli(_git()).materialize_baseline(source, destination, baseline)
+    invalid = _script(tmp_path, "printf 'not-a-tree\\n'", name="invalid-tree-git")
+    with pytest.raises(GitCliError) as captured:
+        ControlledGitCli(invalid).snapshot_candidate(destination)
+    assert captured.value.cause is GitCliErrorCause.COMMAND_FAILED
+
+
+@pytest.mark.parametrize("operation", ["verify", "snapshot"])
+def test_existing_repository_propagates_typed_git_command_failures(
+    tmp_path: Path, operation: str
+) -> None:
+    source, baseline = _source_repository(tmp_path)
+    destination = tmp_path / "candidate"
+    ControlledGitCli(_git()).materialize_baseline(source, destination, baseline)
+    failing = _script(tmp_path, "exit 1", name=f"failing-{operation}-git")
+    cli = ControlledGitCli(failing)
+    with pytest.raises(GitCliError) as captured:
+        if operation == "verify":
+            cli.verify_baseline(destination, baseline)
+        else:
+            cli.snapshot_candidate(destination)
+    assert captured.value.cause is GitCliErrorCause.COMMAND_FAILED
+
+
 def test_controlled_git_cli_exposes_no_generic_command_method() -> None:
     public_methods = {
         name
         for name in dir(ControlledGitCli)
         if not name.startswith("_") and callable(getattr(ControlledGitCli, name))
     }
-    assert public_methods == {"materialize_baseline"}
+    assert public_methods == {
+        "materialize_baseline",
+        "snapshot_candidate",
+        "verify_baseline",
+    }
