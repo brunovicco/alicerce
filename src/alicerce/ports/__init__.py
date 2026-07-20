@@ -5,6 +5,7 @@ from alicerce.ports.state_store import StateStoreError, StateStoreErrorCause, St
 from alicerce.ports.workspace import (
     WorkspaceError,
     WorkspaceErrorCause,
+    WorkspaceIdGeneratorPort,
     WorkspacePort,
 )
 
@@ -16,5 +17,6 @@ __all__ = [
     "StateStorePort",
     "WorkspaceError",
     "WorkspaceErrorCause",
+    "WorkspaceIdGeneratorPort",
     "WorkspacePort",
 ]

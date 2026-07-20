@@ -49,9 +49,9 @@ semantic wrapper types in place of the required values.
 4. `release` idempotently disposes of a workspace owned by the supplied
    capability.
 
-The protocol never accepts or returns `pathlib.Path` or a raw path string. A
-future local adapter owns the private mapping from `WorkspaceId` to its
-filesystem directory. Future command execution should consume the capability
+The protocol never accepts or returns `pathlib.Path` or a raw path string. The
+local Git adapter owns the private mapping from `WorkspaceId` to its filesystem
+directory. Future command execution should consume the capability
 through trusted adapters instead of allowing callers to choose a working
 directory directly.
 
@@ -65,8 +65,7 @@ Workspace implementations expose stable operational causes:
 
 ## Required adapter invariants
 
-The future local adapter must prove through integration and conformance tests
-that:
+The local adapter proves through integration and conformance tests that:
 
 - candidate content starts from the exact immutable baseline SHA;
 - candidate writes cannot modify the trusted checkout;
@@ -83,9 +82,9 @@ path.
 
 ## Acceptance impact
 
-A04 gains the provider-neutral isolation boundary and capability model. It
-remains partial until a local adapter demonstrates real filesystem separation
-and protected-root behavior.
+A04 gains the provider-neutral isolation boundary, capability model, standalone
+clone, protected-root validation, symlink checks, and safe release. It remains
+partial until future candidate commands are confined by OS and command policy.
 
 A08 gains an immutable candidate identity bound to run, baseline, and
 workspace. It remains open until candidate SHA, trusted specification hashes,

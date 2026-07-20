@@ -75,15 +75,18 @@ baseline without exposing a filesystem path. `CandidateIdentity` adds a
 semantically distinct complete candidate SHA. `WorkspacePort` defines trusted
 prepare, load, snapshot, and idempotent release operations.
 
-This boundary contains no filesystem or Git implementation. A04 remains partial
-until a local adapter proves that candidate writes cannot reach the trusted
-checkout, state store, artifact store, or gate drivers. A08 remains open until
-candidate and environment identities are bound into authoritative evidence.
+`LocalGitWorkspace` now implements this boundary with a private in-process
+capability mapping, standalone baseline clones, protected-root and symlink
+checks, deterministic tree snapshots, and safe quarantined release. A04 remains
+partial until future candidate commands receive OS-level confinement. A08
+remains open until candidate and environment identities are bound into
+authoritative evidence.
 
 ## Controlled baseline materialization
 
 The first filesystem/process primitive uses a constrained Git CLI to create an
 independent local clone at an exact detached baseline. It disables inherited
 Git configuration, prompts, hooks, and non-file protocols, removes the remote,
-and exposes no generic command method. `WorkspacePort`, candidate snapshotting,
-release, and untrusted command execution remain separate increments.
+and exposes no generic command method. Typed verification and temporary-index
+tree snapshot operations support the local workspace adapter; untrusted command
+execution remains a separate increment.

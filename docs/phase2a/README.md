@@ -32,6 +32,7 @@ does not require a schema release, tag, or consumer revendor.
 - [Resume identity validation](resume-identity-validation.md)
 - [Isolated workspace boundary](workspace-boundary.md)
 - [Controlled Git CLI boundary](controlled-git-cli.md)
+- [Local Git workspace adapter](local-git-workspace.md)
 - [Trusted gate specifications](trusted-gates.md)
 - [Budget accounting](budget-accounting.md)
 - [Artifact retention](artifact-retention.md)
