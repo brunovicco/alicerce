@@ -322,7 +322,7 @@ class LocalGitWorkspace:
                 if not path.is_symlink():
                     continue
                 try:
-                    target = path.resolve(strict=False)
+                    target = path.resolve(strict=True)
                 except (OSError, RuntimeError) as error:
                     raise WorkspaceError(
                         WorkspaceErrorCause.ISOLATION_FAILURE,

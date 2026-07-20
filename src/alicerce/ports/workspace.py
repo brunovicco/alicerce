@@ -44,3 +44,11 @@ class WorkspacePort(Protocol):
     def release(self, workspace: WorkspaceIdentity) -> None:
         """Idempotently dispose of the workspace owned by the supplied handle."""
         ...
+
+
+class WorkspaceIdGeneratorPort(Protocol):
+    """Supply a new opaque workspace capability identifier."""
+
+    def new_workspace_id(self) -> WorkspaceId:
+        """Return a new valid workspace identifier."""
+        ...
