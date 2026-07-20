@@ -17,7 +17,15 @@ from alicerce.domain.command import (
     NetworkPolicy,
     WorkingDirectory,
 )
-from alicerce.domain.run_identity import BaselineSha, RunId
+from alicerce.domain.run_identity import (
+    BaselineSha,
+    ContractHash,
+    ContractId,
+    ContractVersion,
+    PolicyHash,
+    RunId,
+    RunIdentity,
+)
 from alicerce.domain.workspace import WorkspaceId, WorkspaceIdentity
 
 STARTED = datetime(2026, 7, 20, 16, 0, tzinfo=UTC)
@@ -32,6 +40,18 @@ def _workspace() -> WorkspaceIdentity:
     )
 
 
+def _run_identity() -> RunIdentity:
+    return RunIdentity(
+        run_id=RunId("run-command"),
+        contract_id=ContractId("quality-loop"),
+        contract_version=ContractVersion("0.1.2"),
+        contract_hash=ContractHash("a" * 64),
+        baseline_sha=BaselineSha("b" * 40),
+        policy_hash=PolicyHash("c" * 64),
+        created_at=STARTED,
+    )
+
+
 def _limits() -> CommandLimits:
     return CommandLimits(
         timeout_ms=30_000,
@@ -43,6 +63,7 @@ def _limits() -> CommandLimits:
 
 def _request() -> CommandRequest:
     return CommandRequest(
+        run_identity=_run_identity(),
         workspace=_workspace(),
         action=CommandAction("quality.tests"),
         executable=ExecutableId("python"),
@@ -185,9 +206,25 @@ def test_request_preserves_deterministic_provider_neutral_components() -> None:
     assert not hasattr(request, "path")
 
 
+def test_request_rejects_workspace_that_does_not_match_run_identity() -> None:
+    mismatched_run = replace(
+        _run_identity(),
+        run_id=RunId("different-run"),
+    )
+    with pytest.raises(ValueError, match="workspace does not match"):
+        replace(_request(), run_identity=mismatched_run)
+    mismatched_baseline = replace(
+        _run_identity(),
+        baseline_sha=BaselineSha("d" * 40),
+    )
+    with pytest.raises(ValueError, match="workspace does not match"):
+        replace(_request(), run_identity=mismatched_baseline)
+
+
 @pytest.mark.parametrize(
     "factory",
     [
+        lambda: replace(_request(), run_identity=object()),
         lambda: replace(_request(), workspace=object()),
         lambda: replace(_request(), action=object()),
         lambda: replace(_request(), executable=object()),

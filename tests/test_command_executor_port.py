@@ -14,7 +14,22 @@ from alicerce.domain.command import (
     NetworkPolicy,
     WorkingDirectory,
 )
-from alicerce.domain.run_identity import BaselineSha, RunId
+from alicerce.domain.command_policy import (
+    AuthorizedCommand,
+    CommandPolicy,
+    CommandRule,
+    authorize_command,
+)
+from alicerce.domain.contracts import Actions
+from alicerce.domain.run_identity import (
+    BaselineSha,
+    ContractHash,
+    ContractId,
+    ContractVersion,
+    PolicyHash,
+    RunId,
+    RunIdentity,
+)
 from alicerce.domain.workspace import WorkspaceId, WorkspaceIdentity
 from alicerce.ports.command_executor import (
     CommandExecutionError,
@@ -26,7 +41,17 @@ NOW = datetime(2026, 7, 20, 17, 0, tzinfo=UTC)
 
 
 def _request(action: str = "tests") -> CommandRequest:
+    identity = RunIdentity(
+        run_id=RunId("run-executor"),
+        contract_id=ContractId("quality-loop"),
+        contract_version=ContractVersion("0.1.2"),
+        contract_hash=ContractHash("a" * 64),
+        baseline_sha=BaselineSha("b" * 40),
+        policy_hash=PolicyHash("c" * 64),
+        created_at=NOW,
+    )
     return CommandRequest(
+        run_identity=identity,
         workspace=WorkspaceIdentity(
             WorkspaceId("workspace-executor"),
             RunId("run-executor"),
@@ -42,10 +67,31 @@ def _request(action: str = "tests") -> CommandRequest:
     )
 
 
+def _authorize(request: CommandRequest) -> AuthorizedCommand:
+    rule = CommandRule(
+        action=request.action,
+        executable=request.executable,
+        arguments=request.arguments,
+        working_directory=request.working_directory,
+        environment_names=(),
+        network_policy=request.network_policy,
+        max_limits=request.limits,
+    )
+    return authorize_command(
+        request,
+        CommandPolicy(
+            policy_hash=request.run_identity.policy_hash,
+            actions=Actions(allowed=(request.action.value,), denied=()),
+            rules=(rule,),
+        ),
+    )
+
+
 class DeterministicExecutor:
     """Test-only structural double with no subprocess behavior."""
 
-    def execute(self, request: CommandRequest) -> ExecutionResult:
+    def execute(self, command: AuthorizedCommand) -> ExecutionResult:
+        request = command.request
         if request.action == CommandAction("denied"):
             raise CommandExecutionError(
                 CommandExecutionErrorCause.POLICY_DENIED,
@@ -64,7 +110,7 @@ class DeterministicExecutor:
 
 def test_reference_double_structurally_satisfies_command_executor_port() -> None:
     port: CommandExecutorPort = DeterministicExecutor()
-    result = port.execute(_request())
+    result = port.execute(_authorize(_request()))
     assert result.request.action == CommandAction("tests")
 
 
@@ -86,7 +132,7 @@ def test_nonzero_exit_is_an_operational_result_not_a_port_error() -> None:
 def test_policy_denial_is_a_typed_preexecution_failure() -> None:
     port: CommandExecutorPort = DeterministicExecutor()
     with pytest.raises(CommandExecutionError) as denied:
-        port.execute(_request("denied"))
+        port.execute(_authorize(_request("denied")))
     assert denied.value.cause is CommandExecutionErrorCause.POLICY_DENIED
     assert str(denied.value) == "policy_denied: denied"
 

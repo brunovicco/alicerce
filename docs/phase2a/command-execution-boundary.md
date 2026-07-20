@@ -9,8 +9,8 @@ This increment defines the provider-neutral values and port required for future
 controlled command execution. It creates no process, resolves no executable,
 opens no filesystem path, and performs no network operation.
 
-`CommandRequest` addresses an immutable `WorkspaceIdentity` capability instead
-of a host path. It carries a logical executable identifier, semantic action,
+`CommandRequest` binds the complete `RunIdentity` to an immutable
+`WorkspaceIdentity` capability instead of a host path. It carries a logical executable identifier, semantic action,
 argv arguments, normalized workspace-relative directory, explicit environment,
 deny-all network policy, and positive execution and output ceilings.
 
@@ -42,8 +42,10 @@ a competing serialized command-result model.
 
 ## Port contract
 
-`CommandExecutorPort.execute` accepts one `CommandRequest` and either returns an
-`ExecutionResult` or raises `CommandExecutionError` with a stable typed cause.
+`CommandExecutorPort.execute` accepts one prevalidated `AuthorizedCommand` and
+either returns an `ExecutionResult` or raises `CommandExecutionError` with a
+stable typed cause. Raw requests first pass through the trusted pre-spawn
+authorization use case.
 A nonzero exit code remains a result. Policy denial, missing workspace,
 unavailable executable, spawn failure, failed cleanup, and isolation failure are
 port errors and are never inferred by matching stdout or stderr text.

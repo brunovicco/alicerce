@@ -7,6 +7,7 @@ from enum import StrEnum
 from pathlib import PurePosixPath
 from typing import Final, cast
 
+from alicerce.domain.run_identity import RunIdentity
 from alicerce.domain.workspace import WorkspaceIdentity
 
 _EXECUTABLE_ID_PATTERN: Final = re.compile(r"[a-z][a-z0-9._-]{0,63}\Z")
@@ -153,6 +154,7 @@ class CommandLimits:
 class CommandRequest:
     """Trusted execution request addressed through a workspace capability."""
 
+    run_identity: RunIdentity
     workspace: WorkspaceIdentity
     action: CommandAction
     executable: ExecutableId
@@ -164,7 +166,21 @@ class CommandRequest:
 
     def __post_init__(self) -> None:
         """Reject semantic confusion and nondeterministic request components."""
-        _require_instance(self.workspace, name="workspace", expected=WorkspaceIdentity)
+        run_identity = _require_instance(
+            self.run_identity,
+            name="run_identity",
+            expected=RunIdentity,
+        )
+        workspace = _require_instance(
+            self.workspace,
+            name="workspace",
+            expected=WorkspaceIdentity,
+        )
+        if (
+            workspace.run_id != run_identity.run_id
+            or workspace.baseline_sha != run_identity.baseline_sha
+        ):
+            raise ValueError("workspace does not match the complete run identity")
         _require_instance(self.action, name="action", expected=CommandAction)
         _require_instance(self.executable, name="executable", expected=ExecutableId)
         raw_arguments = cast(object, self.arguments)
