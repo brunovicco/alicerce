@@ -170,6 +170,7 @@ class LocalCommandExecutor:
                 invocation = SandboxInvocation(
                     executable=executable.path,
                     arguments=command.request.arguments,
+                    workspace_root=root,
                     working_directory=working_directory,
                     environment=command.request.environment,
                     network_policy=command.request.network_policy,

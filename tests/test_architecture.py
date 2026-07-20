@@ -153,7 +153,20 @@ def test_local_command_coordination_has_no_embedded_process_backend() -> None:
                 violations.append(str(path.relative_to(ROOT)))
     assert violations == []
     local_exports = (local / "__init__.py").read_text(encoding="utf-8")
-    assert "ProcessSandboxBackend" not in local_exports
+    assert '"ProcessSandboxBackend"' not in local_exports
+
+
+def test_linux_sandbox_is_explicit_and_does_not_mount_the_host_root() -> None:
+    """The first real backend stays platform-specific and avoids broad host visibility."""
+    local = SOURCE_ROOT / "adapters" / "local"
+    source = (local / "linux_process_sandbox.py").read_text(encoding="utf-8")
+    exports = (local / "__init__.py").read_text(encoding="utf-8")
+    assert "class LinuxProcessSandboxBackend" in source
+    assert '"--unshare-net"' in source
+    assert '"--clearenv"' in source
+    assert '("--ro-bind", "/", "/")' not in source
+    assert "LinuxProcessSandboxBackend" in exports
+    assert '"ProcessSandboxBackend"' not in exports
 
 
 def test_runtime_dependency_is_only_pinned_canonical_schemas() -> None:

@@ -36,6 +36,7 @@ does not require a schema release, tag, or consumer revendor.
 - [Controlled command execution boundary](command-execution-boundary.md)
 - [Trusted pre-spawn command authorization](command-authorization.md)
 - [Local command execution coordination](local-command-coordination.md)
+- [Linux process sandbox](linux-process-sandbox.md)
 - [Trusted gate specifications](trusted-gates.md)
 - [Budget accounting](budget-accounting.md)
 - [Artifact retention](artifact-retention.md)

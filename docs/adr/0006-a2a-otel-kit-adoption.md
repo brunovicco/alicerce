@@ -1,91 +1,80 @@
-# ADR 0006: Optional a2a-otel-kit Adoption
+# ADR 0006: Linux process sandbox
 
 Status: Accepted
-Date: 2026-07-18
+Date: 2026-07-20
 
 ## Context
 
-`a2a-otel-kit` provides vendor-neutral OTLP export, structured correlation,
-W3C Trace Context propagation, deny-by-default sanitization, optional A2A/MCP
-integrations, and Collector receipt testing. It also uses an engineering harness
-configuration, providing a useful dogfooding path.
+The provider-neutral command boundary and local coordinator deliberately stop
+before process creation. Phase 2A now needs its first candidate-process adapter
+without weakening `NetworkPolicy.DENY_ALL`, inheriting host authority, or
+presenting a portable interface as portable enforcement.
 
-Version 0.4.2 is Beta and requires Python `>=3.13,<3.15`. Its generic span API
-records exceptions by default, which is inappropriate at boundaries where
-exception messages or stacks may contain subprocess or tool content.
+Python subprocess controls alone cannot provide filesystem and network
+confinement. Linux and macOS expose different primitives, and their failure
+modes must remain visible.
 
 ## Decision
 
-Adopt `a2a-otel-kit` only as an optional adapter behind `ObservabilityPort`.
-The core will not import it, vendor it, or require a Collector.
+Implement a Linux-only `LinuxProcessSandboxBackend` using an explicitly
+configured and content-pinned `bubblewrap` executable.
 
-The initial compatible dependency policy is proposed as:
+Before accepting a deny-all request, the adapter executes a minimal capability
+probe using the same namespace and mount controls required by candidate
+commands. A failed or timed-out probe means the policy is unsupported and the
+candidate executable is not spawned.
 
-```toml
-a2a-otel-kit>=0.4.2,<0.5
-```
+The sandbox:
 
-The source constraint remains bounded while the generated lockfile records the
-exact resolved version. Python 3.12 combinations must be rejected before
-generation; Python 3.13 and 3.14 are the supported initial matrix.
+- creates network, PID, IPC, and UTS namespaces;
+- uses a new session and dies with its parent;
+- exposes `/usr` read-only for the runtime and constructs compatibility links;
+- mounts only the exact candidate workspace as writable;
+- binds the pinned candidate executable at a fixed sandbox path;
+- clears the sandbox environment and sets only explicit entries;
+- changes to the validated working directory without a shell;
+- captures stdout and stderr independently with hard byte ceilings;
+- applies timeout and termination grace limits;
+- terminates the complete host-side sandbox process group;
+- verifies the bubblewrap binary before the probe, before spawn, and after
+  completion.
 
-The adapter must:
-
-- disable exception recording at content-sensitive boundaries;
-- emit only the centrally allowlisted events and scalar attributes;
-- obey central sensitivity and exception-recording policy without adapter-level
-  relaxation;
-- preserve W3C context without copying application payloads;
-- support operation without an available Collector under best-effort policy;
-- expose typed export failure for required-export policy;
-- keep evidence and verdict creation independent of span delivery.
-
-Harness bootstrap integration is deferred until the port and adapter API are
-stable. Proposed future CLI semantics separate capability from protocol:
-
-```text
---observability none|otel
---protocol none|a2a|mcp|both
-```
-
-`agentic` governance never enables the option automatically. `service` is the
-primary supported profile; library and workspace behavior require explicit
-dependency-placement rules.
+The adapter is reexported as a local composition component. Its underlying
+`ProcessSandboxBackend` protocol remains adapter-private.
 
 ## Consequences
 
-- Alicerce gains an official integration path without mandatory dependencies.
-- Python 3.12 remains supported by the core but not by this adapter version.
-- Protocol and Collector integration tests remain outside deterministic core
-  unit tests.
-- A future incompatible kit release requires adapter review.
+Linux deployments require bubblewrap and kernel/runtime permission to create
+the namespaces. Installation alone is insufficient; the capability probe is
+authoritative.
+
+Hosts that disable user namespaces or otherwise block bubblewrap fail closed.
+There is no direct-process fallback and no macOS emulation.
+
+The system runtime is readable through `/usr`; arbitrary host roots, home
+directories, the trusted checkout, state, and evidence roots are not mounted.
+The coordinator's workspace lease and post-execution checks remain mandatory.
+
+## Deferred work
+
+- macOS-specific isolation;
+- trusted CI provisioning that exercises the real confinement profile;
+- cancellation initiated by the orchestrator;
+- durable output and evidence hashing;
+- cross-process execution leases and crash recovery.
 
 ## Rejected alternatives
 
-### Make the kit a mandatory core dependency
+### Plain subprocess with resource limits
 
-Rejected due to dependency weight, Python compatibility, and operational egress.
+Rejected because it cannot enforce the required network or filesystem policy.
 
-### Vendor the kit
+### Read-only bind of the complete host root
 
-Rejected because OpenTelemetry, Pydantic, and structlog do not belong in the
-offline stdlib-only schema-validation boundary.
+Rejected because it would expose secrets and unrelated trusted state to the
+candidate even when writes were denied.
 
-### Install it automatically for agentic governance
+### Silent fallback when bubblewrap is unavailable
 
-Rejected because observability requires explicit choices about configuration,
-network, retention, privacy, and cost.
-
-### Add telemetry fields to schemas immediately
-
-Rejected until an implemented adapter demonstrates a stable, necessary,
-non-authoritative reference shape.
-
-## Acceptance conditions
-
-- The core and no-op adapter pass without the optional package installed.
-- Python 3.13/3.14 tests cover base, A2A, MCP, and combined extras.
-- Python 3.12 receives a clear pre-install rejection.
-- Collector tests verify actual receipt, not only connectivity.
-- Sanitization tests prove prohibited content cannot become telemetry.
-- Adapter failure never produces `VERIFY_FAILED`.
+Rejected because an unavailable enforcement mechanism is an infrastructure
+failure, not permission to run with weaker isolation.

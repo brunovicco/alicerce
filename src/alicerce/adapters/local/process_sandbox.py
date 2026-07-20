@@ -20,6 +20,7 @@ class SandboxInvocation:
 
     executable: Path
     arguments: tuple[str, ...]
+    workspace_root: Path
     working_directory: Path
     environment: tuple[EnvironmentVariable, ...]
     network_policy: NetworkPolicy
