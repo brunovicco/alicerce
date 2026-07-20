@@ -63,9 +63,10 @@ A03 is satisfied for the immutable run bindings defined by `RunIdentity`:
   policy.
 
 A11 remains partial. The use case validates only the trusted bindings currently
-represented by `RunIdentity`. Candidate identity, workspace integrity, evidence
+represented by `RunIdentity`. Workspace and candidate identity types now exist,
+but they are not persisted or revalidated. Workspace integrity, evidence
 hashes, budget counters, deadlines, verdict state, prepared review bundles, and
-idempotency must be modeled and validated by later increments.
+idempotency require later increments.
 
 ## Explicit exclusions
 

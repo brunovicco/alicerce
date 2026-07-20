@@ -30,6 +30,7 @@ does not require a schema release, tag, or consumer revendor.
 - [State store contract](state-store-contract.md)
 - [SQLite state store](sqlite-state-store.md)
 - [Resume identity validation](resume-identity-validation.md)
+- [Isolated workspace boundary](workspace-boundary.md)
 - [Trusted gate specifications](trusted-gates.md)
 - [Budget accounting](budget-accounting.md)
 - [Artifact retention](artifact-retention.md)

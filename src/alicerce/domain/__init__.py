@@ -38,11 +38,20 @@ from alicerce.domain.state import (
     create_initial_checkpoint,
     prepare_state_update,
 )
+from alicerce.domain.workspace import (
+    CandidateIdentity,
+    CandidateSha,
+    WorkspaceId,
+    WorkspaceIdentity,
+    bind_candidate,
+)
 
 __all__ = [
     "FINAL_STATES",
     "BaselineSha",
     "BoundContract",
+    "CandidateIdentity",
+    "CandidateSha",
     "Contract",
     "ContractBindingCause",
     "ContractBindingError",
@@ -64,7 +73,10 @@ __all__ = [
     "StateInvariantCause",
     "StateInvariantError",
     "StateUpdate",
+    "WorkspaceId",
+    "WorkspaceIdentity",
     "advance_lifecycle",
+    "bind_candidate",
     "create_initial_checkpoint",
     "prepare_state_update",
     "start_lifecycle",
