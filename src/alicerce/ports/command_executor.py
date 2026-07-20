@@ -3,7 +3,8 @@
 from enum import StrEnum
 from typing import Protocol
 
-from alicerce.domain.command import CommandRequest, ExecutionResult
+from alicerce.domain.command import ExecutionResult
+from alicerce.domain.command_policy import AuthorizedCommand
 
 
 class CommandExecutionErrorCause(StrEnum):
@@ -29,6 +30,6 @@ class CommandExecutionError(RuntimeError):
 class CommandExecutorPort(Protocol):
     """Execute one validated request through a trusted adapter."""
 
-    def execute(self, request: CommandRequest) -> ExecutionResult:
+    def execute(self, command: AuthorizedCommand) -> ExecutionResult:
         """Return a bounded operational result or raise a typed failure."""
         ...

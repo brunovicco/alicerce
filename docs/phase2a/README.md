@@ -34,6 +34,7 @@ does not require a schema release, tag, or consumer revendor.
 - [Controlled Git CLI boundary](controlled-git-cli.md)
 - [Local Git workspace adapter](local-git-workspace.md)
 - [Controlled command execution boundary](command-execution-boundary.md)
+- [Trusted pre-spawn command authorization](command-authorization.md)
 - [Trusted gate specifications](trusted-gates.md)
 - [Budget accounting](budget-accounting.md)
 - [Artifact retention](artifact-retention.md)

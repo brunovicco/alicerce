@@ -7,6 +7,7 @@ from alicerce.domain import contracts
 
 def test_domain_reexports_the_canonical_contract_objects_by_identity() -> None:
     """Alicerce never substitutes equivalent local contract types."""
+    assert contracts.Actions is canonical.Actions
     assert contracts.Contract is canonical.Contract
     assert contracts.FinalState is canonical.FinalState
     assert contracts.FINAL_STATES is canonical.FINAL_STATES

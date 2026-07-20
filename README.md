@@ -95,6 +95,20 @@ behavior. A06 gains the provider-neutral pre-spawn contract, while A04, A06,
 A07, and A08 remain partial or open until a trusted local adapter enforces the
 policy and evidence bindings against real processes.
 
+## Trusted pre-spawn authorization
+
+`CommandRequest` now preserves the complete run identity and must agree with its
+workspace run and baseline. `CommandPolicy` combines the run-pinned policy hash,
+the canonical contract `Actions`, and exact trusted command rules.
+`execute_authorized_command` rejects changed policy identity, denied actions or
+executables, altered argv, working-directory changes, excess environment
+authority, and raised ceilings before invoking `CommandExecutorPort`.
+
+The executor port accepts only `AuthorizedCommand`. Counting-executor tests
+prove denied requests produce zero port calls. No process or filesystem adapter
+is introduced by this increment; A06 remains partial until the local adapter
+repeats the checks immediately before spawn.
+
 ## Controlled baseline materialization
 
 The first filesystem/process primitive uses a constrained Git CLI to create an

@@ -1,5 +1,6 @@
 """Application use cases and provider-neutral orchestration."""
 
+from alicerce.application.command_execution import execute_authorized_command
 from alicerce.application.contract_binding import bind_contract
 from alicerce.application.lifecycle import advance_lifecycle, start_lifecycle
 from alicerce.application.resume import (
@@ -17,6 +18,7 @@ __all__ = [
     "bind_contract",
     "create_initial_checkpoint",
     "create_run_identity",
+    "execute_authorized_command",
     "load_run_for_resume",
     "prepare_state_update",
     "start_lifecycle",
