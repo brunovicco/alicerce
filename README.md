@@ -123,6 +123,20 @@ gain local coordination evidence but remain partial, and A07 remains open until
 a platform backend demonstrates real confinement, timeout, output ceilings, and
 process-tree cleanup.
 
+## Linux process sandbox
+
+`LinuxProcessSandboxBackend` is the first platform-specific implementation of
+the private process-sandbox seam. It pins an explicitly configured `bubblewrap`
+binary, probes the required namespace support, denies network access, exposes
+only read-only system runtime files plus the writable candidate workspace,
+clears the environment, captures bounded output, applies a wall-clock timeout,
+and terminates the sandbox process group.
+
+The adapter fails closed when the kernel or runner cannot create the requested
+sandbox. It does not provide a macOS fallback. A04, A06, and A07 gain executable
+Linux enforcement evidence but remain partial until the integration profile is
+run on a CI host where the real bubblewrap capability probe succeeds.
+
 ## Controlled baseline materialization
 
 The first filesystem/process primitive uses a constrained Git CLI to create an

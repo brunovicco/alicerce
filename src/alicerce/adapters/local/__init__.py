@@ -2,6 +2,7 @@
 
 from alicerce.adapters.local.command_executor import LocalCommandExecutor, TrustedExecutable
 from alicerce.adapters.local.git_workspace import LocalGitWorkspace
+from alicerce.adapters.local.linux_process_sandbox import LinuxProcessSandboxBackend
 from alicerce.adapters.local.sqlite_state_store import SQLiteStateStore
 from alicerce.adapters.local.state_serialization import (
     STATE_FORMAT_VERSION,
@@ -16,6 +17,7 @@ from alicerce.adapters.local.state_serialization import (
 
 __all__ = [
     "STATE_FORMAT_VERSION",
+    "LinuxProcessSandboxBackend",
     "LocalCommandExecutor",
     "LocalGitWorkspace",
     "SQLiteStateStore",
