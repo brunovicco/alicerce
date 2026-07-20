@@ -135,6 +135,27 @@ def test_domain_and_ports_have_no_filesystem_network_or_process_effects() -> Non
     assert violations == []
 
 
+def test_local_command_coordination_has_no_embedded_process_backend() -> None:
+    """Coordination cannot silently weaken deny-all policy with plain subprocesses."""
+    local = SOURCE_ROOT / "adapters" / "local"
+    violations: list[str] = []
+    for name in ("command_executor.py", "process_sandbox.py"):
+        path = local / name
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported = {alias.name.split(".")[0] for alias in node.names}
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported = {node.module.split(".")[0]}
+            else:
+                continue
+            if "subprocess" in imported:
+                violations.append(str(path.relative_to(ROOT)))
+    assert violations == []
+    local_exports = (local / "__init__.py").read_text(encoding="utf-8")
+    assert "ProcessSandboxBackend" not in local_exports
+
+
 def test_runtime_dependency_is_only_pinned_canonical_schemas() -> None:
     """The mandatory runtime has only the immutable canonical schemas dependency."""
     with (ROOT / "pyproject.toml").open("rb") as stream:

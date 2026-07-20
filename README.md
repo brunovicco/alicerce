@@ -109,6 +109,20 @@ prove denied requests produce zero port calls. No process or filesystem adapter
 is introduced by this increment; A06 remains partial until the local adapter
 repeats the checks immediately before spawn.
 
+## Local command execution coordination
+
+`LocalCommandExecutor` now repeats authorization, resolves a pinned executable,
+obtains a private workspace execution lease, resolves a non-symlink working
+directory, supplies only the explicit environment, and delegates to an
+adapter-private sandbox seam. Executables and workspace integrity are rechecked
+after the backend returns.
+
+The coordinator contains no subprocess implementation. A backend that cannot
+enforce the deny-all network policy is rejected before invocation. A04 and A06
+gain local coordination evidence but remain partial, and A07 remains open until
+a platform backend demonstrates real confinement, timeout, output ceilings, and
+process-tree cleanup.
+
 ## Controlled baseline materialization
 
 The first filesystem/process primitive uses a constrained Git CLI to create an

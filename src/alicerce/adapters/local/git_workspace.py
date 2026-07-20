@@ -3,7 +3,8 @@
 import hashlib
 import os
 import shutil
-from contextlib import suppress
+from collections.abc import Iterator
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
 from threading import RLock
@@ -236,6 +237,22 @@ class LocalGitWorkspace:
                     "workspace release failed",
                 ) from error
             self._forget(record)
+
+    @contextmanager
+    def execution_lease(self, workspace: WorkspaceIdentity) -> Iterator[Path]:
+        """Yield one validated path only to trusted adapter-local coordination."""
+        workspace = _require_instance(
+            workspace,
+            name="workspace",
+            expected=WorkspaceIdentity,
+        )
+        with self._lock:
+            record = self._require_record(workspace)
+            self._validate_record(record)
+            try:
+                yield record.path
+            finally:
+                self._validate_record(record)
 
     @staticmethod
     def _resolve_directory(value: object, *, name: str) -> Path:
