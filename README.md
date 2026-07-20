@@ -82,6 +82,19 @@ partial until future candidate commands receive OS-level confinement. A08
 remains open until candidate and environment identities are bound into
 authoritative evidence.
 
+## Controlled command execution boundary
+
+`CommandRequest` now binds a workspace capability to a logical executable,
+semantic action, argv tuple, normalized relative directory, explicit sorted
+environment, deny-all network policy, and hard time and output ceilings.
+`CommandExecutorPort` returns a bounded immutable operational result or a typed
+failure; a nonzero exit remains data and never becomes a verdict by itself.
+
+This increment intentionally contains no command adapter or generic subprocess
+behavior. A06 gains the provider-neutral pre-spawn contract, while A04, A06,
+A07, and A08 remain partial or open until a trusted local adapter enforces the
+policy and evidence bindings against real processes.
+
 ## Controlled baseline materialization
 
 The first filesystem/process primitive uses a constrained Git CLI to create an

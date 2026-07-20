@@ -25,6 +25,7 @@ BANNED_DOMAIN_TOKENS = {
     "openai",
     "opentelemetry",
 }
+FORBIDDEN_INNER_IMPORTS = {"os", "shutil", "socket", "subprocess"}
 
 
 def _python_files() -> Iterator[Path]:
@@ -112,6 +113,25 @@ def test_domain_and_ports_are_provider_neutral() -> None:
             matches = sorted(token for token in BANNED_DOMAIN_TOKENS if token in content)
             if matches:
                 violations.append(f"{path.relative_to(ROOT)}: {', '.join(matches)}")
+    assert violations == []
+
+
+def test_domain_and_ports_have_no_filesystem_network_or_process_effects() -> None:
+    """Command boundaries remain pure until a separately reviewed adapter exists."""
+    violations: list[str] = []
+    for layer in ("domain", "ports"):
+        for path in sorted((SOURCE_ROOT / layer).rglob("*.py")):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    imported = {alias.name.split(".")[0] for alias in node.names}
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    imported = {node.module.split(".")[0]}
+                else:
+                    continue
+                forbidden = sorted(imported & FORBIDDEN_INNER_IMPORTS)
+                if forbidden:
+                    violations.append(f"{path.relative_to(ROOT)}: {', '.join(forbidden)}")
     assert violations == []
 
 

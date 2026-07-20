@@ -4,6 +4,17 @@ The domain layer has no filesystem, subprocess, network, provider, or adapter
 dependencies.
 """
 
+from alicerce.domain.command import (
+    CommandAction,
+    CommandLimits,
+    CommandRequest,
+    EnvironmentVariable,
+    ExecutableId,
+    ExecutionResult,
+    ExecutionTermination,
+    NetworkPolicy,
+    WorkingDirectory,
+)
 from alicerce.domain.contract_binding import (
     BoundContract,
     ContractBindingCause,
@@ -52,12 +63,19 @@ __all__ = [
     "BoundContract",
     "CandidateIdentity",
     "CandidateSha",
+    "CommandAction",
+    "CommandLimits",
+    "CommandRequest",
     "Contract",
     "ContractBindingCause",
     "ContractBindingError",
     "ContractHash",
     "ContractId",
     "ContractVersion",
+    "EnvironmentVariable",
+    "ExecutableId",
+    "ExecutionResult",
+    "ExecutionTermination",
     "FinalState",
     "LifecycleActor",
     "LifecycleAdvance",
@@ -65,6 +83,7 @@ __all__ = [
     "LifecycleErrorCause",
     "LifecycleState",
     "LifecycleTransition",
+    "NetworkPolicy",
     "PolicyHash",
     "RunCheckpoint",
     "RunId",
@@ -73,6 +92,7 @@ __all__ = [
     "StateInvariantCause",
     "StateInvariantError",
     "StateUpdate",
+    "WorkingDirectory",
     "WorkspaceId",
     "WorkspaceIdentity",
     "advance_lifecycle",

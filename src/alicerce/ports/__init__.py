@@ -1,5 +1,10 @@
 """Provider-neutral interfaces implemented by outer adapters."""
 
+from alicerce.ports.command_executor import (
+    CommandExecutionError,
+    CommandExecutionErrorCause,
+    CommandExecutorPort,
+)
 from alicerce.ports.determinism import ClockPort, IdGeneratorPort
 from alicerce.ports.state_store import StateStoreError, StateStoreErrorCause, StateStorePort
 from alicerce.ports.workspace import (
@@ -11,6 +16,9 @@ from alicerce.ports.workspace import (
 
 __all__ = [
     "ClockPort",
+    "CommandExecutionError",
+    "CommandExecutionErrorCause",
+    "CommandExecutorPort",
     "IdGeneratorPort",
     "StateStoreError",
     "StateStoreErrorCause",
