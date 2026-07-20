@@ -79,3 +79,11 @@ This boundary contains no filesystem or Git implementation. A04 remains partial
 until a local adapter proves that candidate writes cannot reach the trusted
 checkout, state store, artifact store, or gate drivers. A08 remains open until
 candidate and environment identities are bound into authoritative evidence.
+
+## Controlled baseline materialization
+
+The first filesystem/process primitive uses a constrained Git CLI to create an
+independent local clone at an exact detached baseline. It disables inherited
+Git configuration, prompts, hooks, and non-file protocols, removes the remote,
+and exposes no generic command method. `WorkspacePort`, candidate snapshotting,
+release, and untrusted command execution remain separate increments.
