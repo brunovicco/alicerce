@@ -97,6 +97,10 @@ identity, artifact, counter, deadline, verdict, and idempotency boundary.
 A10 is unchanged because verdict persistence and single assignment are not part
 of this state schema.
 
+The subsequent [resume identity validation](resume-identity-validation.md)
+increment supplies independently reconstructed contract, baseline, and policy
+bindings and satisfies A03. The remaining A11 validations are still deferred.
+
 ## Explicit exclusions
 
 This increment does not implement:

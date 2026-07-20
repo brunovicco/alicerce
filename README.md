@@ -48,9 +48,10 @@ authority.
 
 `RunIdentity` accepts a `BoundContract` derived from exact UTF-8 JSON bytes. The
 binding includes the canonical `Contract`, the original bytes, and their
-SHA-256 digest; direct construction revalidates their correspondence. A03
-remains partial until persistence and resume are implemented. A08 remains open
-until evidence integrity bindings are implemented.
+SHA-256 digest; direct construction revalidates their correspondence. Resume
+identity validation independently rechecks contract ID/version/hash, baseline,
+and policy against durable state. A03 is satisfied. A08 remains open until
+evidence integrity bindings are implemented.
 
 ## State persistence boundary
 
@@ -61,6 +62,8 @@ checkpoint compare-and-swap, and append-only ordered history.
 
 `SQLiteStateStore` implements that boundary with schema-versioned canonical
 JSON, atomic journal/checkpoint updates, persistence across process instances,
-and full-history validation on every read. A03 and A11 remain partial until the
-resume use case revalidates external identities, artifacts, counters,
-deadlines, verdict state, and idempotency.
+and full-history validation on every read. `load_run_for_resume` rejects changed
+contract, baseline, or policy bindings and terminal runs before returning a
+checkpoint. A11 remains partial until resume also validates candidate and
+workspace identity, artifacts, counters, deadlines, verdict state, and
+idempotency.
