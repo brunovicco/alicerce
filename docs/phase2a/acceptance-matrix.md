@@ -36,8 +36,8 @@ The dedicated Ubuntu profile supplies reproducible CI evidence for three rows:
   system runtime paths, the private executable directory, and temporary host
   paths remain unavailable or read-only;
 - A06: deny-all namespace capability is mandatory, network access to the host
-  namespace is blocked, and only explicitly authorized environment entries
-  reach the candidate;
+  namespace is blocked, and no host environment entries reach the candidate;
+  only authorized entries and the deterministic sandbox PWD are present;
 - A07: wall-clock timeout returns a typed result and terminates resistant
   descendants before control returns.
 

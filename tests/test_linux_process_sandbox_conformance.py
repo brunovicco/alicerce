@@ -151,11 +151,11 @@ print(json.dumps(results, sort_keys=True))
     assert not outside.exists()
 
 
-def test_candidate_receives_only_explicit_environment(
+def test_candidate_environment_is_explicit_and_not_inherited(
     real_backend: LinuxProcessSandboxBackend,
     tmp_path: Path,
 ) -> None:
-    """No host or runner environment entry reaches the candidate."""
+    """Only declared entries and the deterministic sandbox PWD are present."""
     code = """
 import json
 import os
@@ -170,7 +170,9 @@ print(json.dumps(dict(os.environ), sort_keys=True))
 
     assert result.termination is ExecutionTermination.EXITED
     assert result.exit_code == 0
-    assert json.loads(result.stdout) == {
+    observed = cast(dict[str, str], json.loads(result.stdout))
+    assert observed.pop("PWD") == "/workspace/nested"
+    assert observed == {
         "ALICERCE_ALLOWED": "yes",
         "LC_ALL": "C.UTF-8",
     }

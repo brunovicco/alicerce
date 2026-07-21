@@ -22,7 +22,8 @@ For every execution the trusted adapter:
 8. makes the private `/alicerce` directory non-writable;
 9. mounts the exact candidate workspace at `/workspace`;
 10. creates no general-purpose writable `/tmp`;
-11. clears the environment and restores only explicit entries;
+11. clears the inherited environment, restores explicit entries, and accepts only
+the deterministic sandbox PWD added by bubblewrap;
 12. creates network, PID, IPC, and UTS namespaces;
 13. captures stdout and stderr independently up to their configured ceilings;
 14. terminates the sandbox process group on timeout or output exhaustion;
@@ -63,7 +64,8 @@ The adversarial cases prove:
 - the sandbox cannot reach a TCP listener in the host network namespace;
 - the candidate can write inside `/workspace`;
 - system, private adapter, temporary, and arbitrary host paths are not writable;
-- only explicitly declared environment entries reach the candidate;
+- no host environment entries reach the candidate; only declared entries and the
+deterministic `/workspace` PWD are present;
 - timeout produces `ExecutionTermination.TIMED_OUT`;
 - descendants that ignore SIGTERM stop updating workspace state and cannot
   perform a delayed write after the backend returns.

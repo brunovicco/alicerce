@@ -93,6 +93,6 @@ binary, rejected namespaces, or a failed probe is an infrastructure failure and
 cannot become a skipped or weakened execution.
 
 Adversarial tests prove that the sandbox cannot reach a listener in the host
-network namespace, cannot write outside the mounted workspace, receives only
-explicit environment entries, returns a typed timeout, and terminates
-descendants that resist SIGTERM.
+network namespace, cannot write outside the mounted workspace, inherits no host
+environment entries and receives only explicit entries plus the deterministic
+sandbox PWD, returns a typed timeout, and terminates descendants that resist SIGTERM.
