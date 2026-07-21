@@ -41,7 +41,7 @@ observations may release unused reservation. The policy and its hash are part
 of immutable run identity, and adapters cannot alter their classification.
 
 Captured-output size is an executor safety limit, not a canonical contract
-budget in schemas v0.1.2.
+budget in schemas v0.2.0.
 
 ## Deterministic fake provider
 

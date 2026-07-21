@@ -38,7 +38,9 @@ exceed the request ceilings, and timestamps must be ordered UTC values.
 An operational result is not authoritative evidence and does not decide whether
 a gate passed. The later evidence collector will map validated execution data
 into the canonical `loop_schemas.models.CommandResult`; Alicerce does not define
-a competing serialized command-result model.
+a competing serialized command-result model. The pinned v0.2.0 model provides
+typed termination, nullable exit codes, both output hashes, and the trusted gate
+specification hash. Availability of that shape is not evidence collection.
 
 ## Port contract
 

@@ -7,8 +7,8 @@ Decision date: 2026-07-19
 
 - Python: 3.12, 3.13, and 3.14 for the mandatory core.
 - Packaging: `src` layout with deterministic `uv.lock`.
-- Canonical schemas source: `engineering-loop-schemas v0.1.2`, source code
-  commit `0459d61b7b1d4e7b46709e6d3895770553e6fab0`.
+- Canonical schemas source: `engineering-loop-schemas v0.2.0`, source code
+  commit `4c17dfc7b58b0376a297b728b5ef8cae8c2d2bde`.
 - Schema acquisition: normal dependency pinned to the immutable full source
   commit and resolved by `uv.lock`; Alicerce does not vendor the schema bundle.
 - Optional observability adapters are outside Phase 2A.
@@ -63,10 +63,10 @@ and must not expose GitHub, Codex, Claude, OpenTelemetry, A2A, or MCP SDK types.
 
 `ProviderPort` has only a deterministic fake in Phase 2A.
 
-The initial dependency source is pinned to
-`0459d61b7b1d4e7b46709e6d3895770553e6fab0`. Moving later to a published package
-artifact requires a separate dependency PR proving equivalent source provenance
-and does not change domain boundaries.
+The dependency source is pinned to
+`4c17dfc7b58b0376a297b728b5ef8cae8c2d2bde`, the commit tagged as `v0.2.0`.
+Moving later to a registry artifact requires a separate dependency PR proving
+equivalent source provenance and does not change domain boundaries.
 
 Provider usage observations contain a source identity but no self-declared
 trust flag. A trusted, run-pinned `UsageTrustPolicy` maintained by the domain

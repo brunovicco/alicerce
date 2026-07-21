@@ -8,7 +8,7 @@ Every row is mandatory before Phase 2A can be declared complete.
 | ID | Capability | Required evidence |
 | --- | --- | --- |
 | A01 | Provider-neutral domain | Source scan and import tests show no provider or telemetry SDK identifiers. |
-| A02 | Canonical schemas | Full source commit is pinned and serialized artifacts validate against v0.1.2. |
+| A02 | Canonical schemas | Full source commit is pinned and serialized artifacts validate against v0.2.0. |
 | A03 | Immutable run identity | Mutation and resume tests reject changed contract, baseline, or policy identity. |
 | A04 | Isolated workspace | Builder cannot write trusted checkout, state store, artifact store, or gate drivers. |
 | A05 | Trusted gates | Candidate gate and threshold tampering is inert. |
@@ -43,6 +43,17 @@ The dedicated Ubuntu profile supplies reproducible CI evidence for three rows:
 
 These claims apply to the supported Linux profile. They do not claim a macOS or
 Windows backend and do not satisfy A08 evidence integrity.
+
+## Canonical evidence contract integration
+
+The pinned `engineering-loop-schemas v0.2.0` source supplies typed command
+termination, nullable exit codes, independent stdout and stderr hashes, and the
+immutable gate specification hash. Dependency and identity tests prove that
+Alicerce consumes those canonical types without redefining them locally.
+
+This satisfies the version-provenance portion of A02. It does not satisfy A08:
+trusted serialization, hashing, candidate and environment binding, atomic
+persistence, and tampering tests remain required.
 
 ## Quality gate
 

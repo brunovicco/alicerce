@@ -178,7 +178,7 @@ def test_runtime_dependency_is_only_pinned_canonical_schemas() -> None:
     assert len(dependencies) == 1
     dependency = dependencies[0]
     assert dependency.startswith("loop-schemas @ git+")
-    assert "0459d61b7b1d4e7b46709e6d3895770553e6fab0" in dependency
+    assert "4c17dfc7b58b0376a297b728b5ef8cae8c2d2bde" in dependency
 
 
 def test_forbidden_external_dependencies_are_absent() -> None:
