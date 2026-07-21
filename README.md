@@ -133,9 +133,12 @@ clears the environment, captures bounded output, applies a wall-clock timeout,
 and terminates the sandbox process group.
 
 The adapter fails closed when the kernel or runner cannot create the requested
-sandbox. It does not provide a macOS fallback. A04, A06, and A07 gain executable
-Linux enforcement evidence but remain partial until the integration profile is
-run on a CI host where the real bubblewrap capability probe succeeds.
+sandbox. It does not provide a macOS fallback. A dedicated Ubuntu conformance
+job now requires the real namespace capability and runs adversarial checks for
+network denial, workspace-only persistent writes, explicit environment,
+timeout, and descendant cleanup. A04, A06, and A07 are demonstrated for this
+supported Linux profile; cross-platform confinement and A08 evidence bindings
+remain outside this increment.
 
 ## Controlled baseline materialization
 
