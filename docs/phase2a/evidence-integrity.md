@@ -50,14 +50,16 @@ types, and invalid UTF-8 content are rejected.
 ## Authority boundary
 
 Deterministic bytes and hashes are necessary but not sufficient for
-authoritative evidence. This increment does not:
+authoritative evidence. These primitives do not:
 
-- map an operational ExecutionResult into a canonical CommandResult;
 - define or execute a trusted gate specification;
 - verify the current candidate SHA immediately before evidence assembly;
 - persist output blobs or evidence bytes;
 - publish an artifact commit record;
 - derive a verdict or final state.
+
+Operational-result mapping is implemented separately by
+[Trusted command evidence assembly](command-evidence-assembly.md).
 
 Until those steps are implemented and adversarially tested, A08 remains
 partial. A missing or unpersisted evidence document cannot produce PASS or

@@ -9,10 +9,22 @@ from typing import Final, cast
 
 import loop_schemas.models as canonical  # pyright: ignore[reportMissingTypeStubs]
 
+from alicerce.domain.command import (
+    CommandRequest,
+    ExecutionResult,
+    ExecutionTermination,
+)
+
 _SHA256_PATTERN: Final = re.compile(r"[0-9a-f]{64}\Z")
 _OBJECT_ID_PATTERN: Final = re.compile(r"[0-9a-f]{7,40}\Z")
 _VERSION_PATTERN: Final = re.compile(r"\d+\.\d+\.\d+\Z")
 _TERMINATIONS: Final = frozenset({"EXITED", "TIMED_OUT", "CANCELLED", "OUTPUT_LIMIT"})
+_CANONICAL_TERMINATION: Final[dict[ExecutionTermination, canonical.ExecutionTermination]] = {
+    ExecutionTermination.EXITED: "EXITED",
+    ExecutionTermination.TIMED_OUT: "TIMED_OUT",
+    ExecutionTermination.CANCELLED: "CANCELLED",
+    ExecutionTermination.OUTPUT_LIMIT: "OUTPUT_LIMIT",
+}
 
 
 class EvidenceSerializationError(ValueError):
@@ -97,6 +109,16 @@ def _dump(value: dict[str, object]) -> bytes:
         raise EvidenceSerializationError(
             "evidence cannot be represented as deterministic JSON"
         ) from error
+
+
+def _command_identity(request: CommandRequest) -> str:
+    argv = [request.executable.value, *request.arguments]
+    return json.dumps(
+        argv,
+        ensure_ascii=False,
+        allow_nan=False,
+        separators=(",", ":"),
+    )
 
 
 def _environment_payload(environment: canonical.Environment) -> dict[str, object]:
@@ -239,6 +261,36 @@ def sha256_bytes(data: bytes) -> str:
     if type(data) is not bytes:
         raise TypeError("data must be bytes")
     return hashlib.sha256(data).hexdigest()
+
+
+def build_command_result(
+    execution: ExecutionResult,
+    *,
+    specification_bytes: bytes,
+) -> canonical.CommandResult:
+    """Map one trusted operational result into the canonical evidence model."""
+    trusted = _require_argument(
+        execution,
+        name="execution",
+        expected=ExecutionResult,
+    )
+    if type(specification_bytes) is not bytes:
+        raise TypeError("specification_bytes must be bytes")
+    if not specification_bytes:
+        raise EvidenceSerializationError("specification_bytes must be non-empty")
+    duration = trusted.finished_at - trusted.started_at
+    duration_s = duration.days * 86_400 + duration.seconds + duration.microseconds / 1_000_000
+    result = canonical.CommandResult(
+        command=_command_identity(trusted.request),
+        termination=_CANONICAL_TERMINATION[trusted.termination],
+        exit_code=trusted.exit_code,
+        stdout_sha256=sha256_bytes(trusted.stdout),
+        stderr_sha256=sha256_bytes(trusted.stderr),
+        specification_sha256=sha256_bytes(specification_bytes),
+        duration_s=duration_s,
+    )
+    serialize_command_result(result)
+    return result
 
 
 def serialize_environment(environment: canonical.Environment) -> bytes:

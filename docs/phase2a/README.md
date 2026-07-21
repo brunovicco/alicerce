@@ -38,6 +38,7 @@ does not require a schema release, tag, or consumer revendor.
 - [Local command execution coordination](local-command-coordination.md)
 - [Linux process sandbox](linux-process-sandbox.md)
 - [Canonical evidence serialization and hashing](evidence-integrity.md)
+- [Trusted command evidence assembly](command-evidence-assembly.md)
 - [Trusted gate specifications](trusted-gates.md)
 - [Budget accounting](budget-accounting.md)
 - [Artifact retention](artifact-retention.md)

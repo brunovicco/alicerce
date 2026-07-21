@@ -167,3 +167,14 @@ No artifact is persisted and no operational result is promoted to evidence by
 this increment. A08 remains partial until candidate identity is revalidated,
 trusted execution is mapped into canonical values, and output plus evidence
 artifacts are atomically persisted.
+
+## Trusted command evidence assembly
+
+One validated ExecutionResult can now be mapped into the pinned canonical
+CommandResult. Logical executable and argv become an unambiguous shell-free
+JSON identity; typed termination and exit-code semantics are preserved; exact
+stdout, stderr, and immutable specification bytes are hashed; and duration
+comes from the validated UTC execution interval.
+
+This mapping does not validate candidate identity or assemble and persist the
+complete Evidence document. A08 therefore remains partial.
