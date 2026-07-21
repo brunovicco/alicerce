@@ -1,6 +1,16 @@
 """Local-only adapters authorized for Phase 2A."""
 
 from alicerce.adapters.local.command_executor import LocalCommandExecutor, TrustedExecutable
+from alicerce.adapters.local.evidence_serialization import (
+    EvidenceSerializationError,
+    hash_command_result,
+    hash_environment,
+    hash_evidence,
+    serialize_command_result,
+    serialize_environment,
+    serialize_evidence,
+    sha256_bytes,
+)
 from alicerce.adapters.local.git_workspace import LocalGitWorkspace
 from alicerce.adapters.local.linux_process_sandbox import LinuxProcessSandboxBackend
 from alicerce.adapters.local.sqlite_state_store import SQLiteStateStore
@@ -17,6 +27,7 @@ from alicerce.adapters.local.state_serialization import (
 
 __all__ = [
     "STATE_FORMAT_VERSION",
+    "EvidenceSerializationError",
     "LinuxProcessSandboxBackend",
     "LocalCommandExecutor",
     "LocalGitWorkspace",
@@ -26,7 +37,14 @@ __all__ = [
     "deserialize_checkpoint",
     "deserialize_run_identity",
     "deserialize_transition",
+    "hash_command_result",
+    "hash_environment",
+    "hash_evidence",
     "serialize_checkpoint",
+    "serialize_command_result",
+    "serialize_environment",
+    "serialize_evidence",
     "serialize_run_identity",
     "serialize_transition",
+    "sha256_bytes",
 ]

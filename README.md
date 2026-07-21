@@ -19,6 +19,12 @@ history, whole-checkpoint CAS, and fail-closed corruption detection. It does
 not implement an autonomous runner, full resume orchestration, candidate
 promotion, merge, deployment, provider adapters, or observability integration.
 
+Canonical evidence values now have fail-closed deterministic UTF-8 JSON
+serialization and exact-byte SHA-256 helpers for outputs, environment,
+command-result subdocuments, gate specification bytes, and complete evidence.
+These pure primitives do not build or persist authoritative evidence, so A08
+remains partial.
+
 ## Architectural direction
 
 - canonical contracts remain owned by `engineering-loop-schemas`;
@@ -148,3 +154,16 @@ Git configuration, prompts, hooks, and non-file protocols, removes the remote,
 and exposes no generic command method. Typed verification and temporary-index
 tree snapshot operations support the local workspace adapter; untrusted command
 execution remains a separate increment.
+
+## Evidence integrity primitives
+
+The local trusted adapter serializes the pinned canonical Environment,
+CommandResult, Usage, and Evidence values with sorted keys, compact separators,
+strict UTF-8, and rejection of non-finite numbers or contradictory termination
+state. SHA-256 helpers hash exact output or specification bytes and the
+deterministic canonical JSON subdocuments.
+
+No artifact is persisted and no operational result is promoted to evidence by
+this increment. A08 remains partial until candidate identity is revalidated,
+trusted execution is mapped into canonical values, and output plus evidence
+artifacts are atomically persisted.
