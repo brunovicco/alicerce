@@ -3,6 +3,7 @@
 from alicerce.adapters.local.command_executor import LocalCommandExecutor, TrustedExecutable
 from alicerce.adapters.local.evidence_serialization import (
     EvidenceSerializationError,
+    build_command_result,
     hash_command_result,
     hash_environment,
     hash_evidence,
@@ -34,6 +35,7 @@ __all__ = [
     "SQLiteStateStore",
     "StateSerializationError",
     "TrustedExecutable",
+    "build_command_result",
     "deserialize_checkpoint",
     "deserialize_run_identity",
     "deserialize_transition",

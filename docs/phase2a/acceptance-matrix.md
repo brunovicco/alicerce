@@ -67,6 +67,16 @@ A08 remains partial. Operational-result mapping, candidate revalidation,
 trusted gate specification construction, output and evidence persistence, and
 atomic artifact publication are not implemented by these primitives.
 
+## Trusted command evidence assembly
+
+Trusted operational results now map directly into the canonical CommandResult.
+The mapper uses a shell-free JSON argv identity, preserves typed termination
+and exit-code semantics, derives duration from the validated UTC interval, and
+hashes exact stdout, stderr, and immutable specification bytes.
+
+A08 remains partial. Candidate revalidation, complete Environment and Evidence
+assembly, output persistence, and atomic evidence publication remain required.
+
 ## Quality gate
 
 The implementation quality gate must include, at minimum:
