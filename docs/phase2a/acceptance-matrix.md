@@ -55,6 +55,18 @@ This satisfies the version-provenance portion of A02. It does not satisfy A08:
 trusted serialization, hashing, candidate and environment binding, atomic
 persistence, and tampering tests remain required.
 
+## Canonical serialization and hashing evidence
+
+Trusted pure functions now serialize the pinned canonical environment,
+command-result, and complete-evidence values to deterministic UTF-8 JSON.
+Exact-byte SHA-256 covers captured outputs and serialized gate specifications;
+subdocument and final-document hashes are reproducible and mutation-sensitive.
+Malformed or contradictory values fail before bytes are produced.
+
+A08 remains partial. Operational-result mapping, candidate revalidation,
+trusted gate specification construction, output and evidence persistence, and
+atomic artifact publication are not implemented by these primitives.
+
 ## Quality gate
 
 The implementation quality gate must include, at minimum:
