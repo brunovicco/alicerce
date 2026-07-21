@@ -28,6 +28,22 @@ Every row is mandatory before Phase 2A can be declared complete.
 | A19 | Authority ceiling | No port or adapter exposes merge, deploy, release, or branch-protection mutation. |
 | A20 | Distribution | Wheel and sdist build reproducibly and contain no candidate/run artifacts. |
 
+## Linux sandbox conformance evidence
+
+The dedicated Ubuntu profile supplies reproducible CI evidence for three rows:
+
+- A04: the candidate writes inside the mounted workspace while host paths,
+  system runtime paths, the private executable directory, and temporary host
+  paths remain unavailable or read-only;
+- A06: deny-all namespace capability is mandatory, network access to the host
+  namespace is blocked, and no host environment entries reach the candidate;
+  only authorized entries and the deterministic sandbox PWD are present;
+- A07: wall-clock timeout returns a typed result and terminates resistant
+  descendants before control returns.
+
+These claims apply to the supported Linux profile. They do not claim a macOS or
+Windows backend and do not satisfy A08 evidence integrity.
+
 ## Quality gate
 
 The implementation quality gate must include, at minimum:

@@ -24,7 +24,7 @@ from alicerce.domain.command import ExecutionTermination, NetworkPolicy
 _READ_CHUNK_BYTES = 64 * 1024
 _PROBE_TIMEOUT_SECONDS = 5.0
 _SANDBOX_EXECUTABLE = Path("/alicerce/executable")
-_SANDBOX_TEMP = Path("/") / "tmp"
+_SANDBOX_WORKSPACE = Path("/workspace")
 
 
 def _file_sha256(path: Path) -> bytes:
@@ -148,7 +148,6 @@ class LinuxProcessSandboxBackend:
             )
         self._bubblewrap.verify()
         command = self._build_command(invocation)
-        environment = {entry.name: entry.value for entry in invocation.environment}
         started_at = datetime.now(UTC)
         try:
             process = subprocess.Popen(  # noqa: S603
@@ -157,7 +156,7 @@ class LinuxProcessSandboxBackend:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd="/",
-                env=environment,
+                env={},
                 start_new_session=True,
                 close_fds=True,
             )
@@ -233,8 +232,6 @@ class LinuxProcessSandboxBackend:
             "/proc",
             "--dev",
             "/dev",
-            "--dir",
-            str(_SANDBOX_TEMP),
             "--ro-bind",
             "/usr",
             "/usr",
@@ -250,15 +247,23 @@ class LinuxProcessSandboxBackend:
         ]
 
     def _build_command(self, invocation: SandboxInvocation) -> list[str]:
+        workspace = invocation.workspace_root
+        try:
+            relative_working_directory = invocation.working_directory.relative_to(workspace)
+        except ValueError as error:
+            raise SandboxError(
+                SandboxErrorCause.ISOLATION_FAILURE,
+                "working directory is outside the workspace",
+            ) from error
+
+        sandbox_working_directory = _SANDBOX_WORKSPACE / relative_working_directory
         command = self._base_command()
         command.extend(("--dir", "/alicerce"))
         command.extend(("--ro-bind", str(invocation.executable), str(_SANDBOX_EXECUTABLE)))
-        workspace = invocation.workspace_root
-        for parent in reversed(workspace.parents):
-            if parent != Path("/") and parent != _SANDBOX_TEMP:
-                command.extend(("--dir", str(parent)))
-        command.extend(("--bind", str(workspace), str(workspace)))
-        command.extend(("--chdir", str(invocation.working_directory)))
+        command.extend(("--chmod", "0555", "/alicerce"))
+        command.extend(("--dir", str(_SANDBOX_WORKSPACE)))
+        command.extend(("--bind", str(workspace), str(_SANDBOX_WORKSPACE)))
+        command.extend(("--chdir", str(sandbox_working_directory)))
         for entry in invocation.environment:
             command.extend(("--setenv", entry.name, entry.value))
         command.append("--")

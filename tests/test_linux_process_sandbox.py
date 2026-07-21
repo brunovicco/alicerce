@@ -5,6 +5,7 @@ import shutil
 import signal
 import subprocess
 import sys
+from dataclasses import replace
 from datetime import UTC
 from pathlib import Path
 from typing import cast
@@ -59,6 +60,7 @@ def _fake_bubblewrap(tmp_path: Path, *, probe_exit: int = 0) -> Path:
         f"""
 target=""
 working="/"
+workspace=""
 while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do
     case "$1" in
         --ro-bind)
@@ -69,6 +71,13 @@ while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do
             working="$2"
             shift 2
             ;;
+        --bind)
+            if [ "$3" = "/workspace" ]; then workspace="$2"; fi
+            shift 3
+            ;;
+        --chmod)
+            shift 3
+            ;;
         --setenv)
             export "$2=$3"
             shift 3
@@ -76,7 +85,7 @@ while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do
         --proc|--dev|--dir)
             shift 2
             ;;
-        --symlink|--bind)
+        --symlink)
             shift 3
             ;;
         *)
@@ -87,6 +96,10 @@ done
 shift
 if [ "$1" = "/usr/bin/true" ]; then exit {probe_exit}; fi
 if [ "$1" = "/alicerce/executable" ]; then shift; set -- "$target" "$@"; fi
+case "$working" in
+    /workspace) working="$workspace" ;;
+    /workspace/*) working="$workspace/${{working#/workspace/}}" ;;
+esac
 cd "$working"
 exec "$@"
 """,
@@ -329,6 +342,17 @@ def test_capture_retries_a_nonblocking_read(
 def test_process_tree_cleanup_escalates_and_maps_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    class ExitedProcess:
+        pid = 12344
+
+        def poll(self) -> int:
+            return 0
+
+    LinuxProcessSandboxBackend._terminate_tree(  # pyright: ignore[reportPrivateUsage]
+        cast(subprocess.Popen[bytes], ExitedProcess()),
+        10,
+    )
+
     class StubbornProcess:
         pid = 12345
         waits = 0
@@ -377,12 +401,28 @@ def test_command_contains_only_explicit_mounts_and_no_shell(tmp_path: Path) -> N
     assert "--unshare-net" in command
     assert "--unshare-pid" in command
     assert "--clearenv" in command
+    assert "--chmod" in command
+    assert str(Path("/") / "tmp") not in command
     triples = tuple(zip(command, command[1:], command[2:], strict=False))
     assert ("--ro-bind", "/", "/") not in triples
-    assert "--bind" in command
-    assert str(invocation.workspace_root) in command
+    assert ("--bind", str(invocation.workspace_root), "/workspace") in triples
+    assert ("--chmod", "0555", "/alicerce") in triples
+    assert "/workspace/nested" in command
     assert command[-1] == "/alicerce/executable"
     assert not ({"sh", "bash", "-c"} & set(command))
+
+
+def test_command_rejects_working_directory_outside_workspace(tmp_path: Path) -> None:
+    backend = LinuxProcessSandboxBackend(_fake_bubblewrap(tmp_path))
+    invocation = _invocation(tmp_path, "exit 0")
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    invalid = replace(invocation, working_directory=outside)
+
+    with pytest.raises(SandboxError) as captured:
+        backend._build_command(invalid)  # pyright: ignore[reportPrivateUsage]
+
+    assert captured.value.cause is SandboxErrorCause.ISOLATION_FAILURE
 
 
 @pytest.mark.skipif(shutil.which("bwrap") is None, reason="bubblewrap is unavailable")

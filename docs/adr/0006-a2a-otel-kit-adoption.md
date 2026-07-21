@@ -78,3 +78,21 @@ candidate even when writes were denied.
 
 Rejected because an unavailable enforcement mechanism is an infrastructure
 failure, not permission to run with weaker isolation.
+
+## Linux conformance profile
+
+The supported CI profile runs on Ubuntu 24.04 with an explicitly installed
+bubblewrap package and Python 3.12. The runner configuration enables
+unprivileged user namespaces when Ubuntu AppArmor restricts them. The candidate
+still runs as the unprivileged runner user; bubblewrap is never invoked through
+sudo.
+
+The profile fails before adversarial execution if the production capability
+probe cannot create the required namespaces. Missing bubblewrap, a symlinked
+binary, rejected namespaces, or a failed probe is an infrastructure failure and
+cannot become a skipped or weakened execution.
+
+Adversarial tests prove that the sandbox cannot reach a listener in the host
+network namespace, cannot write outside the mounted workspace, inherits no host
+environment entries and receives only explicit entries plus the deterministic
+sandbox PWD, returns a typed timeout, and terminates descendants that resist SIGTERM.
