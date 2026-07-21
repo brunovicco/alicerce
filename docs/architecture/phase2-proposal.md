@@ -72,7 +72,7 @@ repository hosting, merge, deployment, or telemetry backends.
 ## Canonical final states
 
 Alicerce must use the eight states already defined by
-`engineering-loop-schemas v0.1.2` without renaming or extending them locally:
+`engineering-loop-schemas v0.2.0` without renaming or extending them locally:
 
 | State | Architectural use |
 | --- | --- |
@@ -89,7 +89,7 @@ Intermediate lifecycle states are internal persistence details and must never
 be serialized as canonical final states without a future schema decision.
 
 State semantics are normative in `engineering-loop-schemas`. The table above
-reproduces the v0.1.2 meaning and does not redefine it locally. Earlier design
+reproduces the v0.2.0 meaning and does not redefine it locally. Earlier design
 material also used `NO_PROGRESS` for repeated equivalent diffs or failure
 signatures. Alicerce treats those as internal stall signals: they may support a
 trusted finding that a candidate does not improve the baseline, but they do not

@@ -17,7 +17,7 @@ append-only or compare-and-swap guarded, monotonic, timestamped, and attributed
 to the component that requested them.
 
 The internal lifecycle may use non-canonical working states, but every completed
-run emits exactly one canonical final state from schemas v0.1.2:
+run emits exactly one canonical final state from schemas v0.2.0:
 `SUCCEEDED`, `NO_OP`, `NO_PROGRESS`, `VERIFY_FAILED`, `POLICY_BLOCKED`,
 `BUDGET_EXCEEDED`, `ESCALATED`, or `INFRA_FAILED`.
 

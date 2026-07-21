@@ -5,7 +5,7 @@ description = "Vendor-neutral core for deterministic, auditable, evidence-gated 
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 dependencies = [
-    "loop-schemas @ git+https://github.com/brunovicco/engineering-loop-schemas.git@0459d61b7b1d4e7b46709e6d3895770553e6fab0",
+    "loop-schemas @ git+https://github.com/brunovicco/engineering-loop-schemas.git@4c17dfc7b58b0376a297b728b5ef8cae8c2d2bde",
 ]
 
 [dependency-groups]

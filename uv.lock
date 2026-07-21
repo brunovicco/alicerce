@@ -21,7 +21,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "loop-schemas", git = "https://github.com/brunovicco/engineering-loop-schemas.git?rev=0459d61b7b1d4e7b46709e6d3895770553e6fab0" }]
+requires-dist = [{ name = "loop-schemas", git = "https://github.com/brunovicco/engineering-loop-schemas.git?rev=4c17dfc7b58b0376a297b728b5ef8cae8c2d2bde" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -289,8 +289,8 @@ wheels = [
 
 [[package]]
 name = "loop-schemas"
-version = "0.1.2"
-source = { git = "https://github.com/brunovicco/engineering-loop-schemas.git?rev=0459d61b7b1d4e7b46709e6d3895770553e6fab0#0459d61b7b1d4e7b46709e6d3895770553e6fab0" }
+version = "0.2.0"
+source = { git = "https://github.com/brunovicco/engineering-loop-schemas.git?rev=4c17dfc7b58b0376a297b728b5ef8cae8c2d2bde#4c17dfc7b58b0376a297b728b5ef8cae8c2d2bde" }
 
 [[package]]
 name = "markdown-it-py"

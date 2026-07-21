@@ -16,8 +16,8 @@ The upstream meaning of `NO_PROGRESS` was clarified by
 `585e87447ba7007faf1a51a9f932164afd63d926`. Stall remains an internal signal;
 the typed cause and authoritative evidence determine the canonical final state.
 
-Executable contract provenance remains `engineering-loop-schemas v0.1.2` at
-source commit `0459d61b7b1d4e7b46709e6d3895770553e6fab0`. The non-serialized
+Executable contract provenance is `engineering-loop-schemas v0.2.0` at source
+commit `4c17dfc7b58b0376a297b728b5ef8cae8c2d2bde`. The non-serialized
 stall clarification is pinned separately to documentation decision
 `585e87447ba7007faf1a51a9f932164afd63d926`. That documentation-only decision
 does not require a schema release, tag, or consumer revendor.
